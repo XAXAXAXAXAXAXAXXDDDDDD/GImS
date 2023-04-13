@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include <gimslib/d3d/DX12App.hpp>
 #include <gimslib/d3d/HLSLProgram.hpp>
 #include <gimslib/io/CograBinaryMeshFile.hpp>
@@ -38,6 +39,8 @@ private:
 
   CograBinaryMeshFile m_cbm = CograBinaryMeshFile("../../../data/bunny.cbm");
 
+  ComPtr<ID3D12PipelineState> m_pipelineStateBackFaceCulling;
+  ComPtr<ID3D12PipelineState> m_pipelineStateWireFrameBackFaceCulling;
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12PipelineState> m_pipelineStateWireFrame;
 
@@ -86,10 +89,15 @@ private:
   void                                updateConstantBuffer(/*f32m4 mvFromMouseInput*/);
 
   void createRootSignature();
+
   void createPipeline();
-  void createPipelineWireFrame();
+  void createPipeline_UseBackFaceCulling();
+  void createPipeline_WireFrame();
+  void createPipeline_WireFrame_UseBackFaceCulling();
+
   void createTriangleMesh();
   void createTexture();
 
-  void configurePipeline();
+  void configurePipeline(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc);
+  void configurePipeline_BackFaceCulling(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc);
 };
