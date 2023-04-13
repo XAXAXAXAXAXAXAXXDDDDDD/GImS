@@ -347,7 +347,7 @@ void MeshViewer::onDraw()
     }
   }
   // Use this to get the transformation Matrix.
-  updateConstantBuffer(/*m_examinerController.getTransformationMatrix()*/);
+  updateConstantBuffer();
 
   const auto commandList = getCommandList();
   const auto rtvHandle   = getRTVHandle();
