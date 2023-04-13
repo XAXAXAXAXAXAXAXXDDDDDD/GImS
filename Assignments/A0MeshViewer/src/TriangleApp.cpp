@@ -49,19 +49,85 @@ MeshViewer::MeshViewer(const DX12AppConfig config)
   createPipelineWireFrame();
   createConstantBuffer();
   createTriangleMesh();
+  createTexture();
 }
 
 MeshViewer::~MeshViewer()
 {
 }
 
+void MeshViewer::createTexture()
+{
+  i32 textureWidth, textureHeight, textureComp;
+
+  stbi_set_flip_vertically_on_load(1);
+  std::unique_ptr<ui8, void (*)(ui8*)> image(
+      stbi_load("../../../data/bunny.png", &textureWidth, &textureHeight, &textureComp, 4),
+      [](ui8* p) { stbi_image_free(p); });
+
+  D3D12_RESOURCE_DESC textureDesc = {};
+  textureDesc.MipLevels           = 1;
+  textureDesc.Format              = DXGI_FORMAT_R8G8B8A8_UNORM;
+  textureDesc.Width               = textureWidth;
+  textureDesc.Height              = textureHeight;
+  textureDesc.Flags               = D3D12_RESOURCE_FLAG_NONE;
+  textureDesc.DepthOrArraySize    = 1;
+  textureDesc.SampleDesc.Count    = 1;
+  textureDesc.SampleDesc.Quality  = 0;
+  textureDesc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+  const auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+  throwIfFailed(getDevice()->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &textureDesc,
+                                                     D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+                                                     IID_PPV_ARGS(&m_texture)));
+
+  UploadHelper uploadHelper(getDevice(), GetRequiredIntermediateSize(m_texture.Get(), 0, 1));
+  uploadHelper.uploadTexture(image.get(), m_texture, textureWidth, textureHeight, getCommandQueue());
+
+  D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+  desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+  desc.NumDescriptors             = 1;
+  desc.NodeMask                   = 0;
+  desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+  throwIfFailed(getDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_srv)));
+
+  D3D12_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {};
+  shaderResourceViewDesc.ViewDimension                   = D3D12_SRV_DIMENSION_TEXTURE2D;
+  shaderResourceViewDesc.Shader4ComponentMapping         = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+  shaderResourceViewDesc.Format                          = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+  shaderResourceViewDesc.Texture2D.MipLevels             = 1;
+  shaderResourceViewDesc.Texture2D.MostDetailedMip       = 0;
+  shaderResourceViewDesc.Texture2D.ResourceMinLODClamp   = 0.0f;
+  getDevice()->CreateShaderResourceView(m_texture.Get(), &shaderResourceViewDesc,
+                                        m_srv->GetCPUDescriptorHandleForHeapStart());
+}
+
 void MeshViewer::createRootSignature()
 {
-  CD3DX12_ROOT_PARAMETER parameter = {};
-  parameter.InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+  CD3DX12_ROOT_PARAMETER parameters[2];
+
+  parameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+  CD3DX12_DESCRIPTOR_RANGE range {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
+  parameters[1].InitAsDescriptorTable(1, &range);
+
+  D3D12_STATIC_SAMPLER_DESC sampler = {};
+  sampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_POINT;
+  sampler.AddressU                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.AddressV                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.AddressW                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  sampler.MipLODBias                = 0;
+  sampler.MaxAnisotropy             = 0;
+  sampler.ComparisonFunc            = D3D12_COMPARISON_FUNC_NEVER;
+  sampler.BorderColor               = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+  sampler.MinLOD                    = 0.0f;
+  sampler.MaxLOD                    = D3D12_FLOAT32_MAX;
+  sampler.ShaderRegister            = 0;
+  sampler.RegisterSpace             = 0;
+  sampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
 
   CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-  descRootSignature.Init(1, &parameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+  descRootSignature.Init(2, parameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
   ComPtr<ID3DBlob> rootBlob, errorBlob;
   D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
@@ -137,11 +203,8 @@ void MeshViewer::createPipelineWireFrame()
   throwIfFailed(getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStateWireFrame)));
 }
 
-void MeshViewer::createTriangleMesh(/*std::vector<Vertex> vertices, std::vector<ui32> indices*/)
+void MeshViewer::createTriangleMesh()
 {
-  // std::vector<Vertex> vertexBufferCPU = vertices;
-  // std::vector<ui32>   indexBufferCPU  = indices;
-
   const auto vertexBufferCPUSizeInBytes = m_cbm.getNumVertices() * sizeof(Vertex);
   const auto indexBufferCPUSizeInBytes  = m_cbm.getNumTriangles() * 3 * sizeof(ui32);
 
@@ -156,10 +219,7 @@ void MeshViewer::createTriangleMesh(/*std::vector<Vertex> vertices, std::vector<
   m_vertexBufferView.SizeInBytes    = (ui32)vertexBufferCPUSizeInBytes;
   m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
 
-  uploadBuffer.uploadBuffer(/*reinterpret_cast<f32v3*>(m_cbm.getPositionsPtr())*/ m_vertexBufferCPU.data(),
-                            m_vertexBuffer, vertexBufferCPUSizeInBytes, getCommandQueue());
-
-  // uploadBuffer.uploadBuffer(m_vertexBufferCPU.data(), m_vertexBuffer, vertexBufferCPUSizeInBytes, getCommandQueue());
+  uploadBuffer.uploadBuffer(m_vertexBufferCPU.data(), m_vertexBuffer, vertexBufferCPUSizeInBytes, getCommandQueue());
 
   const auto indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferCPUSizeInBytes);
   getDevice()->CreateCommittedResource(&defaultHeapProperties, D3D12_HEAP_FLAG_NONE, &indexBufferDesc,
@@ -169,8 +229,7 @@ void MeshViewer::createTriangleMesh(/*std::vector<Vertex> vertices, std::vector<
   m_indexBufferView.SizeInBytes    = (ui32)indexBufferCPUSizeInBytes;
   m_indexBufferView.Format         = DXGI_FORMAT_R32_UINT;
 
-  uploadBuffer.uploadBuffer(/*m_indexBufferCPU.data()*/ m_cbm.getTriangleIndices(), m_indexBuffer,
-                            indexBufferCPUSizeInBytes, getCommandQueue());
+  uploadBuffer.uploadBuffer(m_cbm.getTriangleIndices(), m_indexBuffer, indexBufferCPUSizeInBytes, getCommandQueue());
 }
 
 void MeshViewer::createConstantBuffer()
@@ -196,17 +255,57 @@ void MeshViewer::updateConstantBuffer()
 
   cb.mv                         = m_examinerController.getTransformationMatrix();
   cb.mvp                        = pM * cb.mv;
-  cb.ambientColor               = f32v4(0.0f, 0.0f, 0.0f, 0.0f);
-  cb.diffuseColor               = f32v4(1.0f, 1.0f, 1.0f, 1.0f);
-  cb.specularColor_and_Exponent = f32v4(1.0f, 1.0f, 1.0f, 128.0f);
+  cb.ambientColor               = f32v4(m_uiData.m_ambient, 1.0f);
+  cb.diffuseColor               = f32v4(m_uiData.m_diffuse, 1.0f);
+  cb.specularColor_and_Exponent = f32v4(m_uiData.m_specular, m_uiData.m_specularExponent);
   cb.wireFrameColor             = f32v4(m_uiData.m_wireFrameColor, 1.0f);
-  cb.flags                      = 0x1;
+  cb.flags                      = (ui32)m_uiData.m_useTwoSidedLighting | (ui32)m_uiData.m_useTexture << 1;
 
   const auto& currentConstantBuffer = m_constantBuffers[this->getFrameIndex()];
   void*       p;
   currentConstantBuffer->Map(0, nullptr, &p);
   memcpy(p, &cb, sizeof(cb));
   currentConstantBuffer->Unmap(0, nullptr);
+}
+
+void MeshViewer::configurePipeline()
+{
+  m_triangleMeshProgram =
+      HLSLProgram(L"../../../Assignments/A0MeshViewer/Shaders/TriangleMesh.hlsl", "VS_main", "PS_main");
+  D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+      {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+      {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+      {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+
+  psoDesc.InputLayout              = {inputElementDescs, _countof(inputElementDescs)};
+  psoDesc.pRootSignature           = m_rootSignature.Get();
+  psoDesc.VS                       = CD3DX12_SHADER_BYTECODE(m_triangleMeshProgram.getVertexShader().Get());
+  psoDesc.PS                       = CD3DX12_SHADER_BYTECODE(m_triangleMeshProgram.getPixelShader().Get());
+  psoDesc.RasterizerState          = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+  psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+  if (m_uiData.m_useBackFaceCulling)
+  {
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+  }
+  else
+  {
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+  }
+  psoDesc.BlendState                       = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+  psoDesc.DepthStencilState                = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+  psoDesc.SampleMask                       = UINT_MAX;
+  psoDesc.PrimitiveTopologyType            = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+  psoDesc.NumRenderTargets                 = 1;
+  psoDesc.SampleDesc.Count                 = 1;
+  psoDesc.RTVFormats[0]                    = getRenderTarget()->GetDesc().Format;
+  psoDesc.DSVFormat                        = DXGI_FORMAT_D32_FLOAT; // getDepthStencil()->GetDesc().Format;
+  psoDesc.DepthStencilState.DepthEnable    = TRUE;
+  psoDesc.DepthStencilState.DepthFunc      = D3D12_COMPARISON_FUNC_LESS;
+  psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+  psoDesc.DepthStencilState.StencilEnable  = FALSE;
+
+  throwIfFailed(getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
 }
 
 void MeshViewer::onDraw()
@@ -244,10 +343,15 @@ void MeshViewer::onDraw()
   commandList->RSSetViewports(1, &getViewport());
   commandList->RSSetScissorRects(1, &getRectScissor());
 
-  commandList->SetPipelineState(m_pipelineState.Get());
   commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
   commandList->SetGraphicsRootConstantBufferView(0, m_constantBuffers[getFrameIndex()].Get()->GetGPUVirtualAddress());
+
+  const auto srvHandle = m_srv;
+  commandList->SetDescriptorHeaps(1, srvHandle.GetAddressOf());
+  commandList->SetGraphicsRootDescriptorTable(1, m_srv->GetGPUDescriptorHandleForHeapStart());
+
+  commandList->SetPipelineState(m_pipelineState.Get());
   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
   commandList->IASetIndexBuffer(&m_indexBufferView);
@@ -280,6 +384,6 @@ void MeshViewer::onDrawUI()
   ImGui::ColorEdit3("Ambient", &m_uiData.m_ambient.x);
   ImGui::ColorEdit3("Diffuse", &m_uiData.m_diffuse.x);
   ImGui::ColorEdit3("Specular", &m_uiData.m_specular.x);
-  // ImGui::VSliderFloat("Exponent", &m_uiData.m_specularExponent);
+  ImGui::SliderFloat("Exponent", &m_uiData.m_specularExponent, 0.0f, 512.0f);
   ImGui::End();
 }

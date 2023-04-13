@@ -21,13 +21,13 @@ private:
   {
     f32v3 m_backgroundColor     = f32v3(0.25f, 0.25f, 0.25f);
     f32v3 m_wireFrameColor      = f32v3(0.25f, 0.25f, 0.25f);
-    bool  m_useBackFaceCulling  = true;
+    bool  m_useBackFaceCulling  = false;
     bool  m_overLayWireFrame    = false;
     bool  m_useTwoSidedLighting = false;
     bool  m_useTexture          = false;
-    f32v4 m_ambient             = f32v4(0.25f, 0.25f, 0.25f, 1.0f);
-    f32v4 m_diffuse             = f32v4(0.25f, 0.25f, 0.25f, 1.0f);
-    f32v4 m_specular            = f32v4(0.25f, 0.25f, 0.25f, 1.0f);
+    f32v3 m_ambient             = f32v3(0.25f, 0.25f, 0.25f);
+    f32v3 m_diffuse             = f32v3(0.25f, 0.25f, 0.25f);
+    f32v3 m_specular            = f32v3(0.25f, 0.25f, 0.25f);
     f32   m_specularExponent    = 128.0f;
   };
 
@@ -51,6 +51,9 @@ private:
   ComPtr<ID3D12Resource>  m_indexBuffer;
   D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
+  ComPtr<ID3D12Resource>       m_texture;
+  ComPtr<ID3D12DescriptorHeap> m_srv;
+
   f32v3* m_vertices;
   f32v3* m_normals;
   f32v2* m_textCoords;
@@ -62,7 +65,7 @@ private:
   {
     f32v3 position;
     f32v3 normal;
-    f32v2 tex_coord;
+    f32v2 texCoord;
   };
 
   std::vector<Vertex> m_vertexBufferCPU;
@@ -85,5 +88,8 @@ private:
   void createRootSignature();
   void createPipeline();
   void createPipelineWireFrame();
-  void createTriangleMesh(/*std::vector<Vertex> vertices, std::vector<ui32> indices*/);
+  void createTriangleMesh();
+  void createTexture();
+
+  void configurePipeline();
 };
