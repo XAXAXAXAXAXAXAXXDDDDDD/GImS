@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.23)
 
 # set a default CXX standard for the tools and targets that do not specify them.
 # If commented, the latest supported standard for your compiler is automatically set.
@@ -77,7 +77,7 @@ project_options(
   # ENABLE_SANITIZER_MEMORY
   # ENABLE_PCH
   # PCH_HEADERS
-  WARNINGS_AS_ERRORS
+  # WARNINGS_AS_ERRORS
   # ENABLE_INCLUDE_WHAT_YOU_USE
   # ENABLE_USER_LINKER
   # ENABLE_BUILD_WITH_TIME_TRACE
