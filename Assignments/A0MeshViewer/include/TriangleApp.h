@@ -30,6 +30,10 @@ private:
     f32v3 m_diffuse             = f32v3(0.25f, 0.25f, 0.25f);
     f32v3 m_specular            = f32v3(0.25f, 0.25f, 0.25f);
     f32   m_specularExponent    = 128.0f;
+    f32v3 m_lightDirection      = f32v3(0.0f, 0.0f, -1.0f);
+    f32   m_fov                 = 60.0f;
+    f32   m_zNear               = 0.1f;
+    f32   m_zFar                = 5.1f;
   };
 
   UiData m_uiData;
@@ -82,6 +86,7 @@ private:
     f32v4 ambientColor;
     f32v4 diffuseColor;
     f32v4 wireFrameColor;
+    f32v3 lightDirection;
     ui32  flags;
   };
   std::vector<ComPtr<ID3D12Resource>> m_constantBuffers;

@@ -19,6 +19,7 @@ cbuffer PerFrameConstants : register(b0)
   float4   ambientColor;
   float4   diffuseColor;
   float4   wireFrameColor;
+  float3   lightDirection;
   uint1    flags;
 }
 
@@ -47,7 +48,7 @@ float4 PS_main(VertexShaderOutput input)
     bool twoSidedLighting = flags & 0x1;
     bool useTexture       = flags & 0x2;
 
-    float3 lightDirection = float3(0.0f, 0.0f, -1.0f);
+  /*  float3 lightDirection = float3(0.0f, 0.0f, -1.0f);*/
 
     float3 l = normalize(lightDirection);
     float3 n = normalize(input.viewSpaceNormal);
