@@ -48,7 +48,7 @@ float4 PS_main(VertexShaderOutput input)
     bool twoSidedLighting = flags & 0x1;
     bool useTexture       = flags & 0x2;
 
-  /*  float3 lightDirection = float3(0.0f, 0.0f, -1.0f);*/
+    /*  float3 lightDirection = float3(0.0f, 0.0f, -1.0f);*/
 
     float3 l = normalize(lightDirection);
     float3 n = normalize(input.viewSpaceNormal);
@@ -67,7 +67,8 @@ float4 PS_main(VertexShaderOutput input)
 
     return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
                       f_specular * specularColor_and_Exponent.xyz
-                  /*textureColor.xyz*/, 1);
+                  /*textureColor.xyz*/,
+                  1);
   }
 }
 

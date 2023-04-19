@@ -91,18 +91,12 @@ private:
   };
   std::vector<ComPtr<ID3D12Resource>> m_constantBuffers;
   void                                createConstantBuffer();
-  void                                updateConstantBuffer(/*f32m4 mvFromMouseInput*/);
+  void                                updateConstantBuffer();
 
   void createRootSignature();
 
-  void createPipeline();
-  void createPipeline_UseBackFaceCulling();
-  void createPipeline_WireFrame();
-  void createPipeline_WireFrame_UseBackFaceCulling();
+  void createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComPtr<ID3D12PipelineState>* pipeLineState);
 
   void createTriangleMesh();
   void createTexture();
-
-  void configurePipeline(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc);
-  void configurePipeline_BackFaceCulling(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc);
 };
