@@ -15,6 +15,7 @@ cbuffer PerFrameConstants : register(b1)
 {
   float4x4 mvp;
   float4x4 mv;
+  float4x4 mvIT;
   float4   specularColor_and_Exponent;
   float4   ambientColor;
   float4   diffuseColor;

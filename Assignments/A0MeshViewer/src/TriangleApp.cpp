@@ -63,7 +63,7 @@ f32m4 getNormalizationTransformation(f32v3 const* const positions, ui32 nPositio
   f32m4 invertZ_mat = glm::transpose(glm::scale(f32m4(1), f32v3(1, 1, -1)));
 
   // Scale * Translate
-  return invertZ_mat * scale_mat * translation_mat;
+  return /*invertZ_mat **/ scale_mat * translation_mat;
 }
 } // namespace
 
@@ -209,7 +209,7 @@ void MeshViewer::createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComP
   }
 
   psoDesc.RasterizerState.CullMode = cullMode;
-
+ 
   psoDesc.BlendState                       = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
   psoDesc.DepthStencilState                = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
   psoDesc.SampleMask                       = UINT_MAX;
@@ -301,6 +301,7 @@ void MeshViewer::updateConstantBuffer()
 
   cb.mv                         = m_examinerController.getTransformationMatrix() * m_normalizationTransformation;
   cb.mvp                        = pM * cb.mv;
+  cb.mvIT                       = glm::inverseTranspose(cb.mv);
   cb.ambientColor               = f32v4(m_uiData.m_ambient, 1.0f);
   cb.diffuseColor               = f32v4(m_uiData.m_diffuse, 1.0f);
   cb.specularColor_and_Exponent = f32v4(m_uiData.m_specular, m_uiData.m_specularExponent);

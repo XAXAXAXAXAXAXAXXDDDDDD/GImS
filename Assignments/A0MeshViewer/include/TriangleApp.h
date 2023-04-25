@@ -78,6 +78,7 @@ private:
   {
     f32m4 mvp;
     f32m4 mv;
+    f32m4 mvIT;
     f32v4 specularColor_and_Exponent;
     f32v4 ambientColor;
     f32v4 diffuseColor;
