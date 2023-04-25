@@ -20,11 +20,11 @@ private:
     // Implement me: Two Decriptor and parameters
     CD3DX12_ROOT_PARAMETER parameters[2] {};
 
-    CD3DX12_DESCRIPTOR_RANGE range1 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
-    parameters[0].InitAsDescriptorTable(2, &range1);
+    CD3DX12_DESCRIPTOR_RANGE range1 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2};
+    parameters[0].InitAsDescriptorTable(1, &range1);
 
-    CD3DX12_DESCRIPTOR_RANGE range2 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
-    parameters[1].InitAsDescriptorTable(5, &range2);
+    CD3DX12_DESCRIPTOR_RANGE range2 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5};
+    parameters[1].InitAsDescriptorTable(1, &range2);
 
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -152,11 +152,11 @@ public:
   {
     createRootSignature();
     createPipeline();
-    /*m_srv      = */createTextureSRV();
+    /*m_srv      = */ createTextureSRV();
     m_texture0 = createTexture("../../../data/bunny.png");
-    /*m_texture1 = createTexture("../../../data/checker-map_tho.png");*/
+    m_texture1 = createTexture("../../../data/checker-map_tho.png");
     addTextureToSRV(m_texture0, 0);
- /*   addTextureToSRV(m_texture1, 1);*/
+    addTextureToSRV(m_texture1, 1);
   }
 
   virtual void onDraw()
@@ -171,7 +171,14 @@ public:
     commandList->SetDescriptorHeaps(1, m_srv.GetAddressOf());
 
     // Implement me: Bind the textures.
-    commandList->SetGraphicsRootDescriptorTable(1, m_srv->GetGPUDescriptorHandleForHeapStart());
+    auto GPU_base_handle = m_srv->GetGPUDescriptorHandleForHeapStart();
+
+    commandList->SetGraphicsRootDescriptorTable(0, GPU_base_handle);
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE GPU_offset1_handle;
+    GPU_offset1_handle.InitOffsetted(GPU_base_handle, 1, m_srvDescriptorSize);
+
+    commandList->SetGraphicsRootDescriptorTable(1, GPU_offset1_handle);
 
     f32v4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     commandList->ClearRenderTargetView(rtvHandle, &clearColor.x, 0, nullptr);
