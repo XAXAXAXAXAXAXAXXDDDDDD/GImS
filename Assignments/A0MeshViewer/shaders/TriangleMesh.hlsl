@@ -11,7 +11,7 @@ struct VertexShaderOutput_Wireframe
   float4 position : SV_POSITION;
 };
 
-cbuffer PerFrameConstants : register(b0)
+cbuffer PerFrameConstants : register(b1)
 {
   float4x4 mvp;
   float4x4 mv;

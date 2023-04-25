@@ -35,7 +35,6 @@ private:
     f32   m_zNear               = 0.1f;
     f32   m_zFar                = 5.1f;
   };
-
   UiData m_uiData;
 
   gims::ExaminerController m_examinerController;
@@ -43,40 +42,37 @@ private:
 
   CograBinaryMeshFile m_cbm = CograBinaryMeshFile("../../../data/bunny.cbm");
 
+  gims::HLSLProgram m_triangleMeshProgram;
+  gims::HLSLProgram m_triangleMeshProgramWireFrame;
+
+  ComPtr<ID3D12RootSignature> m_rootSignature;
+  void                        createRootSignature();
+
   ComPtr<ID3D12PipelineState> m_pipelineStateBackFaceCulling;
   ComPtr<ID3D12PipelineState> m_pipelineStateWireFrameBackFaceCulling;
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12PipelineState> m_pipelineStateWireFrame;
-
-  gims::HLSLProgram           m_triangleMeshProgram;
-  gims::HLSLProgram           m_triangleMeshProgramWireFrame;
-  ComPtr<ID3D12RootSignature> m_rootSignature;
+  void createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComPtr<ID3D12PipelineState>* pipeLineState);
 
   ComPtr<ID3D12Resource>   m_vertexBuffer;
   D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-
-  ComPtr<ID3D12Resource>  m_indexBuffer;
-  D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
-
-  ComPtr<ID3D12Resource>       m_texture;
-  ComPtr<ID3D12DescriptorHeap> m_srv;
-
-  f32v3* m_vertices;
-  f32v3* m_normals;
-  f32v2* m_textCoords;
-
-  ui32 m_numVertices;
-  ui32 m_numTriangles;
-
+  ComPtr<ID3D12Resource>   m_indexBuffer;
+  D3D12_INDEX_BUFFER_VIEW  m_indexBufferView;
+  f32v3*                   m_vertices;
+  f32v3*                   m_normals;
+  f32v2*                   m_textCoords;
+  ui32                     m_numVertices;
+  ui32                     m_numTriangles;
   struct Vertex
   {
     f32v3 position;
     f32v3 normal;
     f32v2 texCoord;
   };
-
   std::vector<Vertex> m_vertexBufferCPU;
   std::vector<ui32>   m_indexBufferCPU;
+  void                readMeshData();
+  void                createTriangleMesh();
 
   struct ConstantBuffer
   {
@@ -93,10 +89,7 @@ private:
   void                                createConstantBuffer();
   void                                updateConstantBuffer();
 
-  void createRootSignature();
-
-  void createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComPtr<ID3D12PipelineState>* pipeLineState);
-
-  void createTriangleMesh();
-  void createTexture();
+  ComPtr<ID3D12Resource>       m_texture;
+  ComPtr<ID3D12DescriptorHeap> m_srv;
+  void                         createTexture();
 };

@@ -71,19 +71,9 @@ MeshViewer::MeshViewer(const DX12AppConfig config)
 
   m_triangleMeshProgramWireFrame = HLSLProgram(L"../../../Assignments/A0MeshViewer/Shaders/TriangleMesh.hlsl",
                                                "VS_WireFrame_main", "PS_WireFrame_main");
+  readMeshData();
 
   m_examinerController.setTranslationVector(f32v3(0, 0, 3));
-
-  m_vertices   = reinterpret_cast<f32v3*>(m_cbm.getPositionsPtr());
-  m_normals    = reinterpret_cast<f32v3*>(m_cbm.getAttributePtr(0));
-  m_textCoords = reinterpret_cast<f32v2*>(m_cbm.getAttributePtr(1));
-
-  m_vertexBufferCPU.resize(m_cbm.getNumVertices());
-  for (ui32 i = 0; i < m_cbm.getNumVertices(); i++)
-  {
-    m_vertexBufferCPU[i] = Vertex {m_vertices[i], m_normals[i], m_textCoords[i]};
-  }
-
   m_normalizationTransformation = getNormalizationTransformation(m_vertices, m_cbm.getNumVertices());
 
   createRootSignature();
@@ -102,6 +92,8 @@ MeshViewer::MeshViewer(const DX12AppConfig config)
 MeshViewer::~MeshViewer()
 {
 }
+
+#pragma region Texture
 
 void MeshViewer::createTexture()
 {
@@ -148,12 +140,15 @@ void MeshViewer::createTexture()
   getDevice()->CreateShaderResourceView(m_texture.Get(), &shaderResourceViewDesc,
                                         m_srv->GetCPUDescriptorHandleForHeapStart());
 }
+#pragma endregion
+
+#pragma region Root Signature& Pipeline creation
 
 void MeshViewer::createRootSignature()
 {
   CD3DX12_ROOT_PARAMETER parameters[2] {};
 
-  parameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+  parameters[0].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_ALL);
 
   CD3DX12_DESCRIPTOR_RANGE range {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
   parameters[1].InitAsDescriptorTable(1, &range);
@@ -225,6 +220,22 @@ void MeshViewer::createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComP
 
   throwIfFailed(getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&(*pipeLineState))));
 }
+#pragma endregion
+
+#pragma region Triangle Mesh
+
+void MeshViewer::readMeshData()
+{
+  m_vertices   = reinterpret_cast<f32v3*>(m_cbm.getPositionsPtr());
+  m_normals    = reinterpret_cast<f32v3*>(m_cbm.getAttributePtr(0));
+  m_textCoords = reinterpret_cast<f32v2*>(m_cbm.getAttributePtr(1));
+
+  m_vertexBufferCPU.resize(m_cbm.getNumVertices());
+  for (ui32 i = 0; i < m_cbm.getNumVertices(); i++)
+  {
+    m_vertexBufferCPU[i] = Vertex {m_vertices[i], m_normals[i], m_textCoords[i]};
+  }
+}
 
 void MeshViewer::createTriangleMesh()
 {
@@ -254,6 +265,9 @@ void MeshViewer::createTriangleMesh()
 
   uploadBuffer.uploadBuffer(m_cbm.getTriangleIndices(), m_indexBuffer, indexBufferCPUSizeInBytes, getCommandQueue());
 }
+#pragma endregion
+
+#pragma region Constant Buffer
 
 void MeshViewer::createConstantBuffer()
 {
@@ -295,6 +309,9 @@ void MeshViewer::updateConstantBuffer()
   memcpy(p, &cb, sizeof(cb));
   currentConstantBuffer->Unmap(0, nullptr);
 }
+#pragma endregion
+
+#pragma region Draw
 
 void MeshViewer::onDraw()
 {
@@ -392,3 +409,4 @@ void MeshViewer::onDrawUI()
   ImGui::SliderFloat3("Light Direction", &m_uiData.m_lightDirection.x, -1.0f, 1.0f);
   ImGui::End();
 }
+#pragma endregion
