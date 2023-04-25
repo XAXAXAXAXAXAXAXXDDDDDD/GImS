@@ -47,18 +47,23 @@ f32m4 getNormalizationTransformation(f32v3 const* const positions, ui32 nPositio
       max_z = positions[i].z;
   }
   f32v3 translation_vec = allVals / nPositions;
-  f32m4 translation_mat = f32m4(f32v4(1.0f, 0.0f, 0.0f, 0.0f), f32v4(0.0f, 1.0f, 0.0f, 0.0f),
-                                f32v4(0.0f, 0.0f, 1.0f, 0.0f), f32v4(-translation_vec, 1.0f));
+  f32m4 translation_mat = glm::transpose(
+      glm::translate(f32m4(1), translation_vec)); /* f32m4(f32v4(1.0f, 0.0f, 0.0f, 0.0f), f32v4(0.0f, 1.0f, 0.0f, 0.0f),
+                                f32v4(0.0f, 0.0f, 1.0f, 0.0f), f32v4(-translation_vec, 1.0f));*/
 
   // dann max min der längsten Achse abbilden auf -0.5 ... 0.5 --> Skalierung
   f32 scale_factor = 1.0f / std::max(std::abs(min_x) + std::abs(max_x),
                                      std::max(std::abs(min_y) + std::abs(max_y), std::abs(min_z) + std::abs(max_z)));
 
-  f32m4 scale_mat = f32m4(f32v4(scale_factor, 0.0f, 0.0f, 0.0f), f32v4(0.0f, scale_factor, 0.0f, 0.0f),
-                          f32v4(0.0f, 0.0f, scale_factor, 0.0f), f32v4(0.0f, 0.0f, 0.0f, 1.0f));
+  f32m4 scale_mat =
+      glm::transpose(glm::scale(f32m4(1), f32v3(scale_factor))); /* (f32v4(scale_factor, 0.0f, 0.0f, 0.0f), f32v4(0.0f,
+             scale_factor, 0.0f, 0.0f),
+                          f32v4(0.0f, 0.0f, scale_factor, 0.0f), f32v4(0.0f, 0.0f, 0.0f, 1.0f));*/
+
+  f32m4 invertZ_mat = glm::transpose(glm::scale(f32m4(1), f32v3(1, 1, -1)));
 
   // Scale * Translate
-  return scale_mat * translation_mat;
+  return invertZ_mat * scale_mat * translation_mat;
 }
 } // namespace
 
