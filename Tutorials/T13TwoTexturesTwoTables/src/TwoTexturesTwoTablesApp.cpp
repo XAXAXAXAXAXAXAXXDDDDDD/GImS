@@ -123,7 +123,7 @@ private:
     desc.NumDescriptors             = 2;
     desc.NodeMask                   = 0;
     desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    throwIfFailed(getDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_srv)));
+    throwIfFailed(getDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srv)));
 
     m_srvDescriptorSize = getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -152,7 +152,7 @@ public:
   {
     createRootSignature();
     createPipeline();
-    /*m_srv      = */ createTextureSRV();
+    m_srv      = createTextureSRV();
     m_texture0 = createTexture("../../../data/bunny.png");
     m_texture1 = createTexture("../../../data/checker-map_tho.png");
     addTextureToSRV(m_texture0, 0);
