@@ -25,7 +25,7 @@ float4 PS_main(VertexShaderOutput input)
 {
   float3 color0 = g_texture0.Sample(g_sampler, input.texCoord, 0);
   float3 color1 = g_texture1.Sample(g_sampler, input.texCoord, 0);
-  return float4(0.7f * color0 + 0.3f * color1, 1.0f);
+  return float4(0.5f * color0 + 0.5f * color1, 1.0f);
   // return float4(color0, 1.0f);
   // return float4(color1, 1.0f);
 }
