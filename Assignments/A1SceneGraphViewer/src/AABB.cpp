@@ -1,4 +1,5 @@
 #include "AABB.hpp"
+#include <iostream>
 
 namespace gims
 {
@@ -27,24 +28,22 @@ f32m4 AABB::getNormalizationTransformation() const
 
   f32 diffLength = std::max(std::max(diffX, diffY), diffZ);
 
-  f32v3 rightLower(getUpperRightTop().x, getLowerLeftBottom().y, getUpperRightTop().z);
-  f32v3 leftUpper(getLowerLeftBottom().x, getUpperRightTop().y, getLowerLeftBottom().z);
-
   f32v3 translateVec = (getLowerLeftBottom() + getUpperRightTop()) / 2;
   f32m4 translateMat = glm::translate(-translateVec);
 
-  f32m4 scaleMat = glm::scale(f32v3(1) / f32v3(diffLength));
-
+  f32m4 scaleMat = glm::scale(f32v3(1) / f32v3(/*5000*/ diffLength));
+  /*std::cout << glm::to_string(scaleMat) << "\n";
+  std::cout << glm::to_string(translateMat) << "\n";*/
   f32m4 trafo = scaleMat * translateMat;
 
   return trafo;
 }
 AABB AABB::getUnion(const AABB& other) const
 {
-  AABB result;
+  f32v3 posVec[] = {other.getLowerLeftBottom(), other.getUpperRightTop(), getLowerLeftBottom(), getUpperRightTop()};
 
-  (void)other;
-  // Assignment 2
+  AABB result(posVec, 4);
+
   return result;
 }
 const f32v3& AABB::getLowerLeftBottom() const
@@ -73,7 +72,6 @@ AABB AABB::getTransformed(f32m4& transformation) const
 
   AABB result(posVec, 8);
 
-  // Assignment 2
   return result;
 }
 } // namespace gims

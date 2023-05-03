@@ -24,7 +24,7 @@ public:
   {
     f32m4             transformation; //! Transformation to parent node.
     std::vector<ui32> meshIndices;    //! Index in the array of meshIndices, i.e., Scene::m_meshes[].
-    std::vector<ui32> childIndices;   //! Index in the arroy of nodes, i.e.,Scene::m_nodes[].
+    std::vector<ui32> childIndices;   //! Index in the array of nodes, i.e., Scene::m_nodes[].
   };
 
   /// <summary>

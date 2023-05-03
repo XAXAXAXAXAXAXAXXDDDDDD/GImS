@@ -51,6 +51,10 @@ private:
 
   void updateSceneConstantBuffer();
 
+  void createMeshConstantBuffer();
+
+  void updateMeshConstantBuffer();
+
   struct UiData
   {
     f32v3 m_backgroundColor = f32v3(0.25f, 0.25f, 0.25f);
@@ -59,6 +63,7 @@ private:
   ComPtr<ID3D12PipelineState>      m_pipelineState;
   ComPtr<ID3D12RootSignature>      m_rootSignature;
   std::vector<ConstantBufferD3D12> m_constantBuffers;
+  std::vector<ConstantBufferD3D12> m_constantBuffers_Mesh;
   gims::ExaminerController         m_examinerController;
   gims::HLSLProgram                m_shader;
   Scene                            m_scene;

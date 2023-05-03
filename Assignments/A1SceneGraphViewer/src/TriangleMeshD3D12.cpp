@@ -1,6 +1,7 @@
 #include "TriangleMeshD3D12.hpp"
 #include <gimslib/contrib/d3dx12/d3dx12.h>
 #include <gimslib/d3d/UploadHelper.hpp>
+#include <iostream>
 namespace
 {
 struct Vertex
@@ -35,6 +36,7 @@ TriangleMeshD3D12::TriangleMeshD3D12(f32v3 const* const positions, f32v3 const* 
   for (ui32 i = 0; i < nVertices; i++)
   {
     m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], textureCoordinates[i]};
+   /* std::cout << "Position [" << i << "]: " << glm::to_string(positions[i]) << "\n"; */
   }
 
   // create upload helper
@@ -68,6 +70,11 @@ void TriangleMeshD3D12::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>
   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
   commandList->IASetIndexBuffer(&m_indexBufferView);
+
+  //std::cout << "Anzahl gezeichnete Indizes: " << m_nIndices << "\n";
+  //std::cout << m_vertexBufferView.BufferLocation << "\n";
+  //std::cout << m_indexBufferView.BufferLocation << "\n";
+  //std::cout << m_vertexBuffer->GetGPUVirtualAddress() << "\n";
 
   commandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
 }

@@ -153,11 +153,22 @@ void SceneGraphFactory::createMeshes(aiScene const* const inputScene, const ComP
 
 ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outputScene, aiNode const* const inputNode)
 {
-  (void)inputScene;
-  (void)outputScene;
-  (void)inputNode;
+  ui32 currNodeIdx = outputScene.getNumberOfNodes();
+
+  const auto  trafo = inputNode->mTransformation;
+  Scene::Node n     = Scene::Node {f32m4(trafo.a1, trafo.a2, trafo.a3, trafo.a4, trafo.b1, trafo.b2, trafo.b3, trafo.b4,
+                                         trafo.c1, trafo.c2, trafo.c3, trafo.c4, trafo.d1, trafo.d2, trafo.d3, trafo.d4),
+                               std::vector<ui32>(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes),
+                               std::vector<ui32>()};
+  outputScene.m_nodes.push_back(n);
+
+  for (ui32 i = 0; i < inputNode->mNumChildren; i++)
+  {
+    n.childIndices.push_back(createNodes(inputScene, outputScene, inputNode->mChildren[i]));
+  }
+
   // Assignment 4
-  return 0;
+  return currNodeIdx;
 }
 
 void SceneGraphFactory::computeSceneAABB(Scene& scene, AABB& aabb, ui32 nodeIdx, f32m4 transformation)
