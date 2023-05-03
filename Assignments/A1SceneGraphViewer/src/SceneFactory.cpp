@@ -105,6 +105,8 @@ Scene SceneGraphFactory::createFromAssImpScene(const std::filesystem::path      
                                                const ComPtr<ID3D12CommandQueue>& commandQueue)
 {
   Scene outputScene;
+  f32v3 vec[]        = {f32v3(0.0f, 0.0f, 0.0f)};
+  outputScene.m_aabb = AABB(vec, 1);
 
   const auto absolutePath = std::filesystem::weakly_canonical(pathToScene);
   if (!std::filesystem::exists(absolutePath))
@@ -162,10 +164,13 @@ ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outp
                                std::vector<ui32>()};
   outputScene.m_nodes.push_back(n);
 
+  // TODO: do not write node two times, deduce the current index and number of children for vector
+
   for (ui32 i = 0; i < inputNode->mNumChildren; i++)
   {
     n.childIndices.push_back(createNodes(inputScene, outputScene, inputNode->mChildren[i]));
   }
+  outputScene.m_nodes[currNodeIdx] = n;
 
   // Assignment 4
   return currNodeIdx;
@@ -173,12 +178,25 @@ ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outp
 
 void SceneGraphFactory::computeSceneAABB(Scene& scene, AABB& aabb, ui32 nodeIdx, f32m4 transformation)
 {
-  (void)transformation;
-  (void)scene;
-  (void)aabb;
   if (nodeIdx >= scene.getNumberOfNodes())
   {
     return;
+  }
+
+  Scene::Node currNode = scene.getNode(nodeIdx);
+  transformation       = transformation * currNode.transformation;
+
+  for (auto it = currNode.meshIndices.begin(); it != currNode.meshIndices.end(); it++)
+  {
+    const auto aabbMesh            = scene.getMesh(*it).getAABB();
+    AABB       transformedMeshAABB = aabbMesh.getTransformed(transformation);
+
+    aabb = aabb.getUnion(transformedMeshAABB);
+  }
+
+  for (auto it = currNode.childIndices.begin(); it != currNode.childIndices.end(); it++)
+  {
+    computeSceneAABB(scene, aabb, *it, transformation);
   }
   // Assignment 5
 }

@@ -96,6 +96,7 @@ package_project(
   TARGETS
   T0GLM
   A0MeshViewer
+  A1SceneGraphViewer
   gimslib  
   project_options
   project_warnings

@@ -167,8 +167,6 @@ void SceneGraphViewerApp::drawScene(const ComPtr<ID3D12GraphicsCommandList>& cmd
   cmdLst->SetGraphicsRootConstantBufferView(0, cb);
   cmdLst->SetGraphicsRootConstantBufferView(1, cb_mesh);
 
-  m_scene.getMesh(1).addToCommandList(cmdLst);
-
   m_scene.addToCommandList(cmdLst, cameraMatrix, 1, 2, 3);
 }
 

@@ -17,6 +17,10 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
   (void)modelViewRootParameterIdx;
   (void)materialConstantsRootParameterIdx;
   (void)srvRootParameterIdx;
+  scene.getMesh(1).addToCommandList(commandList);
+  /*
+  commandList->SetGraphicsRootConstantBufferView(1, scene.getMesh(1).cb_mesh);
+  scene.getMesh(1).addToCommandList(commandList);*/
   // Assignemt 3
   // Assignemt 6
   // Assignment 10
