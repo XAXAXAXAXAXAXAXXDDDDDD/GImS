@@ -21,7 +21,7 @@ SceneGraphViewerApp::SceneGraphViewerApp(const DX12AppConfig config, const std::
   m_shader = HLSLProgram(L"../../../Assignments/A1SceneGraphViewer/Shaders/TriangleMesh.hlsl", "VS_main", "PS_main");
   createRootSignature();
   createSceneConstantBuffer();
-  createMeshConstantBuffer();
+  // createMeshConstantBuffer();
   createPipeline();
 }
 
@@ -92,7 +92,7 @@ void SceneGraphViewerApp::createRootSignature()
   parameters[7].InitAsDescriptorTable(1, &range5);
 
   parameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-  parameters[1].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_ALL);
+  parameters[1].InitAsConstants(16, 1, D3D12_SHADER_VISIBILITY_ALL);
   parameters[2].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_ALL);
 
   D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -151,11 +151,11 @@ void SceneGraphViewerApp::drawScene(const ComPtr<ID3D12GraphicsCommandList>& cmd
 {
   updateSceneConstantBuffer();
 
-  updateMeshConstantBuffer();
+  // updateMeshConstantBuffer();
 
   // Assignment 2: Uncomment after successfull implementation.
-  const auto cb           = m_constantBuffers[getFrameIndex()].getResource()->GetGPUVirtualAddress();
-  const auto cb_mesh      = m_constantBuffers_Mesh[getFrameIndex()].getResource()->GetGPUVirtualAddress();
+  const auto cb = m_constantBuffers[getFrameIndex()].getResource()->GetGPUVirtualAddress();
+  // const auto cb_mesh      = m_constantBuffers_Mesh[getFrameIndex()].getResource()->GetGPUVirtualAddress();
   const auto cameraMatrix = m_examinerController.getTransformationMatrix();
 
   // Assignment 6
@@ -165,9 +165,11 @@ void SceneGraphViewerApp::drawScene(const ComPtr<ID3D12GraphicsCommandList>& cmd
   // Assignment 2: Uncomment after successfull implementation.
   cmdLst->SetGraphicsRootSignature(m_rootSignature.Get());
   cmdLst->SetGraphicsRootConstantBufferView(0, cb);
-  cmdLst->SetGraphicsRootConstantBufferView(1, cb_mesh);
+  // cmdLst->SetGraphicsRootConstantBufferView(1, cb_mesh);
 
-  m_scene.addToCommandList(cmdLst, cameraMatrix, 1, 2, 3);
+  f32m4 transformation = cameraMatrix * m_scene.getAABB().getNormalizationTransformation();
+
+  m_scene.addToCommandList(cmdLst, transformation, 1, 2, 3);
 }
 
 namespace PerSceneConstants
@@ -207,21 +209,21 @@ void SceneGraphViewerApp::updateSceneConstantBuffer()
   m_constantBuffers[getFrameIndex()].upload(&cb);
 }
 
-void SceneGraphViewerApp::createMeshConstantBuffer()
-{
-  const PerMeshConstants::ConstantBuffer cb         = {};
-  const auto                             frameCount = getDX12AppConfig().frameCount;
-  m_constantBuffers_Mesh.resize(frameCount);
-  for (ui32 i = 0; i < frameCount; i++)
-  {
-    m_constantBuffers_Mesh[i] = ConstantBufferD3D12(cb, getDevice());
-  }
-}
-
-void SceneGraphViewerApp::updateMeshConstantBuffer()
-{
-  PerMeshConstants::ConstantBuffer cb {};
-  cb.modelViewMatrix =
-      m_examinerController.getTransformationMatrix() * m_scene.getMesh(1).getAABB().getNormalizationTransformation();
-  m_constantBuffers_Mesh[getFrameIndex()].upload(&cb);
-}
+// void SceneGraphViewerApp::createMeshConstantBuffer()
+//{
+//   const PerMeshConstants::ConstantBuffer cb         = {};
+//   const auto                             frameCount = getDX12AppConfig().frameCount;
+//   m_constantBuffers_Mesh.resize(frameCount);
+//   for (ui32 i = 0; i < frameCount; i++)
+//   {
+//     m_constantBuffers_Mesh[i] = ConstantBufferD3D12(cb, getDevice());
+//   }
+// }
+//
+// void SceneGraphViewerApp::updateMeshConstantBuffer()
+//{
+//   PerMeshConstants::ConstantBuffer cb {};
+//   cb.modelViewMatrix =
+//       m_examinerController.getTransformationMatrix() * m_scene.getMesh(1).getAABB().getNormalizationTransformation();
+//   m_constantBuffers_Mesh[getFrameIndex()].upload(&cb);
+// }

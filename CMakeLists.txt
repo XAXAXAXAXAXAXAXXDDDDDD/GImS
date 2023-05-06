@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.26)
 
 # set a default CXX standard for the tools and targets that do not specify them.
 # If commented, the latest supported standard for your compiler is automatically set.
@@ -96,7 +96,6 @@ package_project(
   TARGETS
   T0GLM
   A0MeshViewer
-  A1SceneGraphViewer
   gimslib  
   project_options
   project_warnings

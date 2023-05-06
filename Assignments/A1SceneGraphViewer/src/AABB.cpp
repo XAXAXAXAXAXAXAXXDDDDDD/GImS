@@ -71,6 +71,12 @@ AABB AABB::getTransformed(f32m4& transformation) const
   f32v3 posVec[] = {p1, p2, p3, p4, p5, p6, p7, p8};
 
   AABB result(posVec, 8);
+  // f32v3 p7 = transformation * f32v4(getLowerLeftBottom(), 1.0f);
+  // f32v3 p8 = transformation * f32v4(getUpperRightTop(), 1.0f);
+
+  // f32v3 posVec[] = {p7, p8};
+
+  // AABB result(posVec, 2);
 
   return result;
 }

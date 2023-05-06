@@ -5,6 +5,7 @@
 #include <gimslib/contrib/d3dx12/d3dx12.h>
 #include <gimslib/d3d/UploadHelper.hpp>
 #include <gimslib/dbg/HrException.hpp>
+#include <numeric>
 
 using namespace gims;
 
@@ -108,6 +109,8 @@ Scene SceneGraphFactory::createFromAssImpScene(const std::filesystem::path      
   f32v3 vec[]        = {f32v3(0.0f, 0.0f, 0.0f)};
   outputScene.m_aabb = AABB(vec, 1);
 
+  outputScene.m_srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
   const auto absolutePath = std::filesystem::weakly_canonical(pathToScene);
   if (!std::filesystem::exists(absolutePath))
   {
@@ -153,15 +156,39 @@ void SceneGraphFactory::createMeshes(aiScene const* const inputScene, const ComP
   }
 }
 
+inline f32m4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
+{
+  f32m4 to;
+
+  to[0][0] = (f32)from->a1;
+  to[0][1] = (f32)from->b1;
+  to[0][2] = (f32)from->c1;
+  to[0][3] = (f32)from->d1;
+  to[1][0] = (f32)from->a2;
+  to[1][1] = (f32)from->b2;
+  to[1][2] = (f32)from->c2;
+  to[1][3] = (f32)from->d2;
+  to[2][0] = (f32)from->a3;
+  to[2][1] = (f32)from->b3;
+  to[2][2] = (f32)from->c3;
+  to[2][3] = (f32)from->d3;
+  to[3][0] = (f32)from->a4;
+  to[3][1] = (f32)from->b4;
+  to[3][2] = (f32)from->c4;
+  to[3][3] = (f32)from->d4;
+
+  return to;
+}
+
 ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outputScene, aiNode const* const inputNode)
 {
   ui32 currNodeIdx = outputScene.getNumberOfNodes();
 
   const auto  trafo = inputNode->mTransformation;
-  Scene::Node n     = Scene::Node {f32m4(trafo.a1, trafo.a2, trafo.a3, trafo.a4, trafo.b1, trafo.b2, trafo.b3, trafo.b4,
-                                         trafo.c1, trafo.c2, trafo.c3, trafo.c4, trafo.d1, trafo.d2, trafo.d3, trafo.d4),
-                               std::vector<ui32>(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes),
-                               std::vector<ui32>()};
+  Scene::Node n     = Scene::Node {
+      glm::transpose(f32m4(trafo.a1, trafo.a2, trafo.a3, trafo.a4, trafo.b1, trafo.b2, trafo.b3, trafo.b4, trafo.c1,
+                               trafo.c2, trafo.c3, trafo.c4, trafo.d1, trafo.d2, trafo.d3, trafo.d4)),
+      std::vector<ui32>(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes), std::vector<ui32>()};
   outputScene.m_nodes.push_back(n);
 
   // TODO: do not write node two times, deduce the current index and number of children for vector
@@ -175,6 +202,32 @@ ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outp
   // Assignment 4
   return currNodeIdx;
 }
+
+// ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outputScene, aiNode const* const
+// inputNode)
+//{
+//   ui32 currNodeIdx = outputScene.getNumberOfNodes();
+//
+//   std::vector<ui32> childIndices;
+//   childIndices.resize(inputNode->mNumChildren);
+//   std::iota(childIndices.begin(), childIndices.end(), currNodeIdx + 1);
+//
+//   std::vector<ui32> meshIndices(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes);
+//
+//   f32m4 trafo = aiMatrix4x4ToGlm(&inputNode->mTransformation);
+//
+//   Scene::Node n = Scene::Node {trafo, meshIndices, childIndices};
+//   outputScene.m_nodes.push_back(n);
+//
+//   // TODO: do not write node two times, deduce the current index and number of children for vector
+//
+//   for (ui32 i = 0; i < inputNode->mNumChildren; i++)
+//   {
+//     createNodes(inputScene, outputScene, inputNode->mChildren[i]);
+//   }
+//
+//   return currNodeIdx;
+// }
 
 void SceneGraphFactory::computeSceneAABB(Scene& scene, AABB& aabb, ui32 nodeIdx, f32m4 transformation)
 {
@@ -201,29 +254,119 @@ void SceneGraphFactory::computeSceneAABB(Scene& scene, AABB& aabb, ui32 nodeIdx,
   // Assignment 5
 }
 
+enum defaultTextures
+{
+  defaultTextureWhite,
+  defaultTextureBlack,
+  defaultTextureBlue
+};
+
 void SceneGraphFactory::createTextures(
     const std::unordered_map<std::filesystem::path, ui32>& textureFileNameToTextureIndex,
     std::filesystem::path parentPath, const ComPtr<ID3D12Device>& device,
     const ComPtr<ID3D12CommandQueue>& commandQueue, Scene& outputScene)
 {
-  (void)textureFileNameToTextureIndex;
-  (void)parentPath;
-  (void)device;
-  (void)commandQueue;
-  (void)outputScene;
-  // Assignment 9
+  ui8v4 white(1, 1, 1, 1);
+  ui8v4 black(0, 0, 0, 1);
+  ui8v4 blue(0, 0, 1, 1);
+
+  auto              value_selector = [](auto pair) { return pair.second; };
+  std::vector<ui32> values(textureFileNameToTextureIndex.size());
+  transform(textureFileNameToTextureIndex.begin(), textureFileNameToTextureIndex.end(), values.begin(), value_selector);
+  auto it = max_element(std::begin(values), std::end(values));
+
+  outputScene.m_textures.resize((*it) + 1);
+  Texture2DD3D12 defaultTextureWhite(&white, 1, 1, device, commandQueue);
+  outputScene.m_textures[defaultTextures::defaultTextureWhite] = defaultTextureWhite;
+
+  Texture2DD3D12 defaultTextureBlack(&black, 1, 1, device, commandQueue);
+  outputScene.m_textures[defaultTextures::defaultTextureBlack] = defaultTextureBlack;
+
+  Texture2DD3D12 defaultTextureBlue(&blue, 1, 1, device, commandQueue);
+  outputScene.m_textures[defaultTextures::defaultTextureBlue] = defaultTextureBlue;
+
+  for (auto& keyValuePair : textureFileNameToTextureIndex)
+  {
+    Texture2DD3D12 currTexture(parentPath / keyValuePair.first, device, commandQueue);
+    outputScene.m_textures[keyValuePair.second] = currTexture;
+  }
 }
 
 void SceneGraphFactory::createMaterials(aiScene const* const                            inputScene,
                                         std::unordered_map<std::filesystem::path, ui32> textureFileNameToTextureIndex,
                                         const ComPtr<ID3D12Device>& device, Scene& outputScene)
 {
-  (void)inputScene;
-  (void)textureFileNameToTextureIndex;
-  (void)device;
-  (void)outputScene;
-  // Assignment 7
+  outputScene.m_materials.resize(inputScene->mNumMaterials);
+  for (ui32 i = 0; i < inputScene->mNumMaterials; i++)
+  {
+    ComPtr<ID3D12DescriptorHeap> srv;
+
+    D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+    desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors             = 5;
+    desc.NodeMask                   = 0;
+    desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    throwIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srv)));
+
+    // const auto srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    const auto material = inputScene->mMaterials[i];
+
+    aiColor3D color_diffuse(0.f, 0.f, 0.f);
+    material->Get(AI_MATKEY_COLOR_DIFFUSE, color_diffuse);
+
+    aiColor4D color_specular(0.f, 0.f, 0.f, 0.f);
+    material->Get(AI_MATKEY_COLOR_SPECULAR, color_specular);
+
+    aiColor3D color_ambient(0.f, 0.f, 0.f);
+    material->Get(AI_MATKEY_COLOR_AMBIENT, color_ambient);
+
+    // material->GetTexture(aiTextureType_AMBIENT, i, &path);
+
+    // const auto texturePathCstr = path.C_Str();
+    // const auto textureIter     = textureFileNameToTextureIndex.find(texturePathCstr);
+
+    Scene::Material m;
+    m.srvDescriptorHeap               = srv;
+    Scene::MaterialConstantBuffer mCB = {};
+    mCB.ambientColor                  = f32v4(color_ambient.r, color_ambient.g, color_ambient.b, 1.0f);
+    mCB.diffuseColor                  = f32v4(color_diffuse.r, color_diffuse.g, color_diffuse.b, 1.0f);
+    mCB.specularColorAndExponent      = f32v4(color_specular.r, color_specular.g, color_specular.b, color_specular.a);
+
+    m.materialConstantBuffer = ConstantBufferD3D12(mCB, device);
+
+    addTextureToDescriptorHeap(device, aiTextureType_AMBIENT, 0, material, outputScene.m_textures, m,
+                               textureFileNameToTextureIndex, defaultTextures::defaultTextureBlack);
+    addTextureToDescriptorHeap(device, aiTextureType_DIFFUSE, 1, material, outputScene.m_textures, m,
+                               textureFileNameToTextureIndex, defaultTextures::defaultTextureBlack);
+    addTextureToDescriptorHeap(device, aiTextureType_SPECULAR, 2, material, outputScene.m_textures, m,
+                               textureFileNameToTextureIndex, defaultTextures::defaultTextureWhite);
+    addTextureToDescriptorHeap(device, aiTextureType_EMISSIVE, 3, material, outputScene.m_textures, m,
+                               textureFileNameToTextureIndex, defaultTextures::defaultTextureBlack);
+    addTextureToDescriptorHeap(device, aiTextureType_HEIGHT, 4, material, outputScene.m_textures, m,
+                               textureFileNameToTextureIndex, defaultTextures::defaultTextureBlue);
+
+    outputScene.m_materials[i] = m;
+  }
   // Assignment 9
 }
 
+// void SceneGraphViewerApp::createSceneConstantBuffer()
+//{
+//   const PerSceneConstants::ConstantBuffer cb         = {};
+//   const auto                              frameCount = getDX12AppConfig().frameCount;
+//   m_constantBuffers.resize(frameCount);
+//   for (ui32 i = 0; i < frameCount; i++)
+//   {
+//     m_constantBuffers[i] = ConstantBufferD3D12(cb, getDevice());
+//   }
+// }
+//
+// void SceneGraphViewerApp::updateSceneConstantBuffer()
+//{
+//   PerSceneConstants::ConstantBuffer cb {};
+//   cb.projectionMatrix =
+//       glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 1.0f / 256.0f, 256.0f);
+//   m_constantBuffers[getFrameIndex()].upload(&cb);
+// }
 } // namespace gims

@@ -58,5 +58,26 @@ VertexShaderOutput VS_main(float3 position : POSITION, float3 normal : NORMAL, f
 float4 PS_main(VertexShaderOutput input)
     : SV_TARGET
 {
-    return float4(input.viewSpaceNormal.x, input.texCoord.y, 0.0f, 1.0f);
+    float3 l = normalize(float3(-1.0f, 0.0f, 0.0f));
+    float3 n = normalize(input.viewSpaceNormal);
+
+    float3 v = normalize(-input.viewSpacePosition);
+    float3 h = normalize(l + v);
+
+    float f_diffuse = max(0.0f, dot(n, l));
+    float f_specular = pow(max(0.0f, dot(n, h)), specularColorAndExponent.w);
+
+    float3 textureColorAmbient = g_textureAmbient.Sample(g_sampler, input.texCoord, 0);
+    float3 textureColorDiffuse = g_textureDiffuse.Sample(g_sampler, input.texCoord, 0);
+    float3 textureColorSpecular = g_textureSpecular.Sample(g_sampler, input.texCoord, 0);
+    float3 textureColorEmissive = g_textureEmissive.Sample(g_sampler, input.texCoord, 0);
+    float3 textureColorHeight = g_textureNormal.Sample(g_sampler, input.texCoord, 0);
+    // float3 textureColor = float3(1.0f, 1.0f, 1.0f);
+
+    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*f_diffuse * */textureColorDiffuse.xyz * diffuseColor.xyz +
+                      textureColorSpecular * specularColorAndExponent.xyz,
+                  1);
+    
+ /*   return float4(textureColorSpecular, 1.0f);*/ /*diffuseColor;*/ /*float4(input.texCoord.x, input.texCoord.y, 0.0f, 1.0f);*/
+
 }
