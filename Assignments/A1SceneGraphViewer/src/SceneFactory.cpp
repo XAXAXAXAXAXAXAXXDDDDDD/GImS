@@ -191,8 +191,6 @@ ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outp
       std::vector<ui32>(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes), std::vector<ui32>()};
   outputScene.m_nodes.push_back(n);
 
-  // TODO: do not write node two times, deduce the current index and number of children for vector
-
   for (ui32 i = 0; i < inputNode->mNumChildren; i++)
   {
     n.childIndices.push_back(createNodes(inputScene, outputScene, inputNode->mChildren[i]));

@@ -31,10 +31,8 @@ f32m4 AABB::getNormalizationTransformation() const
   f32v3 translateVec = (getLowerLeftBottom() + getUpperRightTop()) / 2;
   f32m4 translateMat = glm::translate(-translateVec);
 
-  f32m4 scaleMat = glm::scale(f32v3(1) / f32v3(/*5000*/ diffLength));
-  /*std::cout << glm::to_string(scaleMat) << "\n";
-  std::cout << glm::to_string(translateMat) << "\n";*/
-  f32m4 trafo = scaleMat * translateMat;
+  f32m4 scaleMat = glm::scale(f32v3(1) / f32v3(diffLength));
+  f32m4 trafo    = scaleMat * translateMat;
 
   return trafo;
 }
@@ -56,7 +54,7 @@ const f32v3& AABB::getUpperRightTop() const
 }
 AABB AABB::getTransformed(f32m4& transformation) const
 {
-  f32v3 p1 = transformation * f32v4(getUpperRightTop().x, getUpperRightTop().y, getUpperRightTop().z, 1.0f);
+  /*f32v3 p1 = transformation * f32v4(getUpperRightTop().x, getUpperRightTop().y, getUpperRightTop().z, 1.0f);
   f32v3 p2 = transformation * f32v4(getUpperRightTop().x, getUpperRightTop().y, getLowerLeftBottom().z, 1.0f);
 
   f32v3 p3 = transformation * f32v4(getUpperRightTop().x, getLowerLeftBottom().y, getUpperRightTop().z, 1.0f);
@@ -70,13 +68,13 @@ AABB AABB::getTransformed(f32m4& transformation) const
 
   f32v3 posVec[] = {p1, p2, p3, p4, p5, p6, p7, p8};
 
-  AABB result(posVec, 8);
-  // f32v3 p7 = transformation * f32v4(getLowerLeftBottom(), 1.0f);
-  // f32v3 p8 = transformation * f32v4(getUpperRightTop(), 1.0f);
+  AABB result(posVec, 8);*/
+  f32v3 p7 = transformation * f32v4(getLowerLeftBottom(), 1.0f);
+  f32v3 p8 = transformation * f32v4(getUpperRightTop(), 1.0f);
 
-  // f32v3 posVec[] = {p7, p8};
+  f32v3 posVec[] = {p7, p8};
 
-  // AABB result(posVec, 2);
+  AABB result(posVec, 2);
 
   return result;
 }
