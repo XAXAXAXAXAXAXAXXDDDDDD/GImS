@@ -35,7 +35,14 @@ TriangleMeshD3D12::TriangleMeshD3D12(f32v3 const* const positions, f32v3 const* 
 
   for (ui32 i = 0; i < nVertices; i++)
   {
-    m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], textureCoordinates[i]};
+    if (!textureCoordinates)
+    {
+      m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], f32v3(0.0f, 0.0f, 0.0f)};
+    }
+    else
+    {
+      m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], textureCoordinates[i]};
+    }
     /* std::cout << "Position [" << i << "]: " << glm::to_string(positions[i]) << "\n"; */
   }
 
