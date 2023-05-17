@@ -35,13 +35,14 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
     // Implement me: Bind the textures.
     auto GPU_base_handle = material.srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
-    commandList->SetGraphicsRootDescriptorTable(3, GPU_base_handle);
+    commandList->SetGraphicsRootDescriptorTable(srvRootParameterIdx, GPU_base_handle);
+
     for (ui32 i = 1; i < 5; i++)
     {
       CD3DX12_GPU_DESCRIPTOR_HANDLE GPU_offset_i_handle;
       GPU_offset_i_handle.InitOffsetted(GPU_base_handle, i, scene.getSrvDescriptorSize());
 
-      commandList->SetGraphicsRootDescriptorTable(3 + i, GPU_offset_i_handle);
+      commandList->SetGraphicsRootDescriptorTable(srvRootParameterIdx + i, GPU_offset_i_handle);
     }
 
     scene.getMesh(*it).addToCommandList(commandList);

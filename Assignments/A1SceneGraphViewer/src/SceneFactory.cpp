@@ -264,9 +264,9 @@ void SceneGraphFactory::createTextures(
     std::filesystem::path parentPath, const ComPtr<ID3D12Device>& device,
     const ComPtr<ID3D12CommandQueue>& commandQueue, Scene& outputScene)
 {
-  ui8v4 white(1, 1, 1, 1);
+  ui8v4 white(255, 255, 255, 1);
   ui8v4 black(0, 0, 0, 1);
-  ui8v4 blue(0, 0, 1, 1);
+  ui8v4 blue(0, 0, 255, 1);
 
   auto              value_selector = [](auto pair) { return pair.second; };
   std::vector<ui32> values(textureFileNameToTextureIndex.size());

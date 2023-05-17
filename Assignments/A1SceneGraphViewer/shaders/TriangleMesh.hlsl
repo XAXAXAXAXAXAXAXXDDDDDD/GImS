@@ -66,17 +66,19 @@ float4 PS_main(VertexShaderOutput input)
 
     float f_diffuse = max(0.0f, dot(n, l));
     float f_specular = pow(max(0.0f, dot(n, h)), specularColorAndExponent.w);
-
+    
     float3 textureColorAmbient = g_textureAmbient.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorDiffuse = g_textureDiffuse.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorSpecular = g_textureSpecular.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorEmissive = g_textureEmissive.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorHeight = g_textureNormal.Sample(g_sampler, input.texCoord, 0);
+    
     // float3 textureColor = float3(1.0f, 1.0f, 1.0f);
 
-    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*f_diffuse * */textureColorDiffuse.xyz * diffuseColor.xyz +
-                      textureColorSpecular * specularColorAndExponent.xyz,
-                  1);
+    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*textureColorHeight +*//*f_diffuse **/ textureColorDiffuse.xyz * diffuseColor.xyz +
+                      f_specular * textureColorSpecular * specularColorAndExponent.xyz, 1);
+    
+    //return float4(textureColorHeight, 1);
     
  /*   return float4(textureColorSpecular, 1.0f);*/ /*diffuseColor;*/ /*float4(input.texCoord.x, input.texCoord.y, 0.0f, 1.0f);*/
 
