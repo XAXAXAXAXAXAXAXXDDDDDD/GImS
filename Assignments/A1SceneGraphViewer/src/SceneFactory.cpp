@@ -109,7 +109,7 @@ Scene SceneGraphFactory::createFromAssImpScene(const std::filesystem::path      
   f32v3 vec[]        = {f32v3(0.0f, 0.0f, 0.0f)};
   outputScene.m_aabb = AABB(vec, 1);
 
-  outputScene.m_srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+  // outputScene.m_srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
   const auto absolutePath = std::filesystem::weakly_canonical(pathToScene);
   if (!std::filesystem::exists(absolutePath))
@@ -325,12 +325,16 @@ void SceneGraphFactory::createMaterials(aiScene const* const                    
     // const auto textureIter     = textureFileNameToTextureIndex.find(texturePathCstr);
 
     Scene::Material m;
+    // set descriptor heap for textures
     m.srvDescriptorHeap               = srv;
+
+    // create material constant buffer
     Scene::MaterialConstantBuffer mCB = {};
     mCB.ambientColor                  = f32v4(color_ambient.r, color_ambient.g, color_ambient.b, 1.0f);
     mCB.diffuseColor                  = f32v4(color_diffuse.r, color_diffuse.g, color_diffuse.b, 1.0f);
     mCB.specularColorAndExponent      = f32v4(color_specular.r, color_specular.g, color_specular.b, color_specular.a);
 
+    // set constant buffer
     m.materialConstantBuffer = ConstantBufferD3D12(mCB, device);
 
     addTextureToDescriptorHeap(device, aiTextureType_AMBIENT, 0, material, outputScene.m_textures, m,

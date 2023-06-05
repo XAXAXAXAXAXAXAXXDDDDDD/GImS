@@ -75,7 +75,7 @@ float4 PS_main(VertexShaderOutput input)
     
     // float3 textureColor = float3(1.0f, 1.0f, 1.0f);
 
-    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*textureColorHeight +*//*f_diffuse **/ textureColorDiffuse.xyz * diffuseColor.xyz +
+    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*textureColorHeight +*/ /*f_diffuse **/textureColorDiffuse.xyz * diffuseColor.xyz +
                       f_specular * textureColorSpecular * specularColorAndExponent.xyz, 1);
     
     //return float4(textureColorHeight, 1);

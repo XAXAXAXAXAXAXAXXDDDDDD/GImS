@@ -74,22 +74,26 @@ void SceneGraphViewerApp::onDrawUI()
 
 void SceneGraphViewerApp::createRootSignature()
 {
-  CD3DX12_ROOT_PARAMETER parameters[8] {};
+  CD3DX12_ROOT_PARAMETER parameters[4] {};
 
-  CD3DX12_DESCRIPTOR_RANGE range {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
-  parameters[3].InitAsDescriptorTable(1, &range);
+  CD3DX12_DESCRIPTOR_RANGE range1 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
+  // parameters[3].InitAsDescriptorTable(1, &range);
 
   CD3DX12_DESCRIPTOR_RANGE range2 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1};
-  parameters[4].InitAsDescriptorTable(1, &range2);
+  // parameters[4].InitAsDescriptorTable(1, &range2);
 
   CD3DX12_DESCRIPTOR_RANGE range3 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2};
-  parameters[5].InitAsDescriptorTable(1, &range3);
+  // parameters[5].InitAsDescriptorTable(1, &range3);
 
   CD3DX12_DESCRIPTOR_RANGE range4 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3};
-  parameters[6].InitAsDescriptorTable(1, &range4);
+  // parameters[6].InitAsDescriptorTable(1, &range4);
 
   CD3DX12_DESCRIPTOR_RANGE range5 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4};
-  parameters[7].InitAsDescriptorTable(1, &range5);
+  /*parameters[7].InitAsDescriptorTable(1, &range5);*/
+
+  CD3DX12_DESCRIPTOR_RANGE ranges[5] = {range1, range2, range3, range4, range5};
+
+  parameters[3].InitAsDescriptorTable(5, ranges);
 
   parameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
   parameters[1].InitAsConstants(16, 1, D3D12_SHADER_VISIBILITY_ALL);
@@ -111,7 +115,7 @@ void SceneGraphViewerApp::createRootSignature()
   sampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
 
   CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-  descRootSignature.Init(8, parameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+  descRootSignature.Init(/*8*/4, parameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
   ComPtr<ID3DBlob> rootBlob, errorBlob;
   D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
@@ -181,14 +185,14 @@ struct ConstantBuffer
 
 } // namespace PerSceneConstants
 
-namespace PerMeshConstants
-{
-struct ConstantBuffer
-{
-  f32m4 modelViewMatrix;
-};
-
-} // namespace PerMeshConstants
+//namespace PerMeshConstants
+//{
+//struct ConstantBuffer
+//{
+//  f32m4 modelViewMatrix;
+//};
+//
+//} // namespace PerMeshConstants
 
 void SceneGraphViewerApp::createSceneConstantBuffer()
 {
