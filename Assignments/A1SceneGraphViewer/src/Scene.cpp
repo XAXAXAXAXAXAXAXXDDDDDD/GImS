@@ -87,10 +87,10 @@ const AABB& Scene::getAABB() const
   return m_aabb;
 }
 
-const ui32 Scene::getSrvDescriptorSize() const
-{
-  return m_srvDescriptorSize;
-}
+//const ui32 Scene::getSrvDescriptorSize() const
+//{
+//  return m_srvDescriptorSize;
+//}
 
 void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
                              ui32 modelViewRootParameterIdx, ui32 materialConstantsRootParameterIdx,

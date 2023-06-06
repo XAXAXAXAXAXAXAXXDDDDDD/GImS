@@ -88,7 +88,7 @@ public:
   /// <param name="materialIdx">The index of the material</param>
   const Material& getMaterial(ui32 materialIdx) const;
 
-  const ui32 getSrvDescriptorSize() const;
+  //const ui32 getSrvDescriptorSize() const;
 
   /// <summary>
   /// Traverse the scene graph and add the draw calls, and all other neccessary commands to the command list.
@@ -115,6 +115,6 @@ private:
   std::vector<Material>          m_materials; //! Material information for each mesh.
   std::vector<Texture2DD3D12>    m_textures;  //! Array of textures.
 
-  ui32 m_srvDescriptorSize;
+  //ui32 m_srvDescriptorSize;
 };
 } // namespace gims
