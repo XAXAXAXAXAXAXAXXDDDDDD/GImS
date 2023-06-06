@@ -1,9 +1,5 @@
 #pragma once
 #include "AABB.hpp"
-#include <d3d12.h>
-#include <gimslib/types.hpp>
-#include <vector>
-#include <wrl.h>
 using Microsoft::WRL::ComPtr;
 
 namespace gims
@@ -42,13 +38,35 @@ public:
   /// Returns the axis-aligned bounding-box of the mesh.
   /// </summary>
   /// <returns></returns>
-  const AABB getAABB() const;
+  const AABB& getAABB() const;
 
   /// <summary>
   /// Gets the matrix index of this mesh.
   /// </summary>
   /// <returns><The material index of the mesh./returns>
   const ui32 getMaterialIndex() const;
+
+  /// <summary>
+  /// Returns the input element descriptors required for the bounding boxes pipeline.
+  /// </summary>
+  /// <returns>The input element descriptor.</returns>
+  static const std::vector<D3D12_INPUT_ELEMENT_DESC>& getInputElementDescriptorsBoundingBox();
+
+  /// <summary>
+  /// Creates the vertex and index buffer of the bounding boxes of this mesh.
+  /// </summary>
+  /// <param name="device"></param>
+  /// <param name="commandQueue"></param>
+  void createVertexAndIndexBufferBoundingBox(const ComPtr<ID3D12Device>&       device,
+                                           const ComPtr<ID3D12CommandQueue>& commandQueue);
+
+  // void createIndexBuffer(const ComPtr<ID3D12Device>& device, const ComPtr<ID3D12CommandQueue>& commandQueue);
+
+  /// <summary>
+  /// Adds the commands necessary for rendering the bounding boxes of this mesh to command list.
+  /// </summary>
+  /// <param name="commandList"></param>
+  void addToCommandListBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList) const;
 
   /// <summary>
   /// Returns the input element descriptors required for the pipeline.
@@ -74,6 +92,13 @@ private:
   D3D12_INDEX_BUFFER_VIEW  m_indexBufferView;
   //! Input element descriptor defining the vertex format.
   static const std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs;
+
+  ComPtr<ID3D12Resource>   m_vertexBufferBoundingBox; //! The vertex buffer on the GPU.
+  D3D12_VERTEX_BUFFER_VIEW m_vertexBufferViewBoundingBox;
+  ComPtr<ID3D12Resource>   m_indexBufferBoundingBox; //! The index buffer on the GPU.
+  D3D12_INDEX_BUFFER_VIEW  m_indexBufferViewBoundingBox;
+  //! Input element descriptor defining the vertex format.
+  static const std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescsBoundingBox;
 };
 
 } // namespace gims

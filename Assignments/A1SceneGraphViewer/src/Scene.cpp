@@ -53,6 +53,32 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
                          materialConstantsRootParameterIdx, srvRootParameterIdx);
   }
 }
+
+void addToCommandListImplWireframe(Scene& scene, ui32 nodeIdx, f32m4 transformation,
+                                   const ComPtr<ID3D12GraphicsCommandList>& commandList, ui32 modelViewRootParameterIdx)
+{
+  if (nodeIdx >= scene.getNumberOfNodes())
+  {
+    return;
+  }
+
+  Scene::Node currNode = scene.getNode(nodeIdx);
+  transformation       = transformation * currNode.transformation;
+
+  for (auto it = currNode.meshIndices.begin(); it != currNode.meshIndices.end(); it++)
+  {
+    const auto trafo    = transformation;
+    void*      trafoPtr = (void*)&trafo;
+    commandList->SetGraphicsRoot32BitConstants(modelViewRootParameterIdx, 16, trafoPtr, 0);
+
+    scene.getMesh(*it).addToCommandListBoundingBox(commandList);
+  }
+
+  for (auto it = currNode.childIndices.begin(); it != currNode.childIndices.end(); it++)
+  {
+    addToCommandListImplWireframe(scene, *it, transformation, commandList, modelViewRootParameterIdx);
+  }
+}
 } // namespace
 
 namespace gims
@@ -87,10 +113,10 @@ const AABB& Scene::getAABB() const
   return m_aabb;
 }
 
-//const ui32 Scene::getSrvDescriptorSize() const
+// const ui32 Scene::getSrvDescriptorSize() const
 //{
-//  return m_srvDescriptorSize;
-//}
+//   return m_srvDescriptorSize;
+// }
 
 void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
                              ui32 modelViewRootParameterIdx, ui32 materialConstantsRootParameterIdx,
@@ -98,5 +124,11 @@ void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandLis
 {
   addToCommandListImpl(*this, 0, transformation, commandList, modelViewRootParameterIdx,
                        materialConstantsRootParameterIdx, srvRootParameterIdx);
+}
+
+void Scene::addToCommandListBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
+                                      ui32 modelViewRootParameterIdx)
+{
+  addToCommandListImplWireframe(*this, 0, transformation, commandList, modelViewRootParameterIdx);
 }
 } // namespace gims

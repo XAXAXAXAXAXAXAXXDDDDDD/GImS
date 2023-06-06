@@ -23,6 +23,7 @@ SceneGraphViewerApp::SceneGraphViewerApp(const DX12AppConfig config, const std::
   createSceneConstantBuffer();
   // createMeshConstantBuffer();
   createPipeline();
+  createPipelineBoundingBox();
 }
 
 void SceneGraphViewerApp::onDraw()
@@ -59,6 +60,12 @@ void SceneGraphViewerApp::onDraw()
   commandList->RSSetScissorRects(1, &getRectScissor());
 
   drawScene(commandList);
+
+  // now draw wireframe
+  if (m_uiData.m_showBoundingBox)
+  {
+    drawSceneBoundingBox(commandList);
+  }
 }
 
 void SceneGraphViewerApp::onDrawUI()
@@ -69,6 +76,7 @@ void SceneGraphViewerApp::onDrawUI()
   ImGui::End();
   ImGui::Begin("Configuration", nullptr, imGuiFlags);
   ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
+  ImGui::Checkbox("Show Bounding Boxes", &m_uiData.m_showBoundingBox);
   ImGui::End();
 }
 
@@ -115,7 +123,8 @@ void SceneGraphViewerApp::createRootSignature()
   sampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
 
   CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-  descRootSignature.Init(/*8*/4, parameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+  descRootSignature.Init(/*8*/ 4, parameters, 1, &sampler,
+                         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
   ComPtr<ID3DBlob> rootBlob, errorBlob;
   D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
@@ -176,6 +185,58 @@ void SceneGraphViewerApp::drawScene(const ComPtr<ID3D12GraphicsCommandList>& cmd
   m_scene.addToCommandList(cmdLst, transformation, 1, 2, 3);
 }
 
+#pragma region Bounding Box
+
+void SceneGraphViewerApp::drawSceneBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList)
+{
+  updateSceneConstantBuffer();
+
+  const auto cb = m_constantBuffers[getFrameIndex()].getResource()->GetGPUVirtualAddress();
+
+  const auto cameraMatrix = m_examinerController.getTransformationMatrix();
+
+  commandList->SetPipelineState(m_pipelineStateBoundingBox.Get());
+
+  commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+  commandList->SetGraphicsRootConstantBufferView(0, cb);
+
+  f32m4 transformation = cameraMatrix * m_scene.getAABB().getNormalizationTransformation();
+
+  m_scene.addToCommandListBoundingBox(commandList, transformation, 1);
+}
+
+void SceneGraphViewerApp::createPipelineBoundingBox()
+{
+  HLSLProgram shaderBoundingBox = HLSLProgram(L"../../../Assignments/A1SceneGraphViewer/Shaders/TriangleMesh.hlsl",
+                                            "VS_BoundingBox_main", "PS_BoundingBox_main");
+
+  waitForGPU();
+  const auto inputElementDescs = TriangleMeshD3D12::getInputElementDescriptorsBoundingBox();
+
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+  psoDesc.InputLayout                        = {inputElementDescs.data(), (ui32)inputElementDescs.size()};
+  psoDesc.pRootSignature                     = m_rootSignature.Get();
+  psoDesc.VS                                 = CD3DX12_SHADER_BYTECODE(shaderBoundingBox.getVertexShader().Get());
+  psoDesc.PS                                 = CD3DX12_SHADER_BYTECODE(shaderBoundingBox.getPixelShader().Get());
+  psoDesc.RasterizerState                    = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+  psoDesc.RasterizerState.FillMode           = D3D12_FILL_MODE_SOLID;
+  psoDesc.RasterizerState.CullMode           = D3D12_CULL_MODE_NONE;
+  psoDesc.BlendState                         = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+  psoDesc.DSVFormat                          = getDX12AppConfig().depthBufferFormat;
+  psoDesc.DepthStencilState.DepthEnable      = TRUE;
+  psoDesc.DepthStencilState.DepthFunc        = D3D12_COMPARISON_FUNC_LESS;
+  psoDesc.DepthStencilState.DepthWriteMask   = D3D12_DEPTH_WRITE_MASK_ALL;
+  psoDesc.DepthStencilState.StencilEnable    = FALSE;
+  psoDesc.SampleMask                         = UINT_MAX;
+  psoDesc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+  psoDesc.NumRenderTargets                   = 1;
+  psoDesc.RTVFormats[0]                      = getDX12AppConfig().renderTargetFormat;
+  psoDesc.SampleDesc.Count                   = 1;
+  throwIfFailed(getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStateBoundingBox)));
+}
+
+#pragma endregion
+
 namespace PerSceneConstants
 {
 struct ConstantBuffer
@@ -185,14 +246,14 @@ struct ConstantBuffer
 
 } // namespace PerSceneConstants
 
-//namespace PerMeshConstants
+// namespace PerMeshConstants
 //{
-//struct ConstantBuffer
+// struct ConstantBuffer
 //{
-//  f32m4 modelViewMatrix;
-//};
+//   f32m4 modelViewMatrix;
+// };
 //
-//} // namespace PerMeshConstants
+// } // namespace PerMeshConstants
 
 void SceneGraphViewerApp::createSceneConstantBuffer()
 {

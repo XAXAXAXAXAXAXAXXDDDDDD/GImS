@@ -75,11 +75,33 @@ float4 PS_main(VertexShaderOutput input)
     
     // float3 textureColor = float3(1.0f, 1.0f, 1.0f);
 
-    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*textureColorHeight +*/ /*f_diffuse **/textureColorDiffuse.xyz * diffuseColor.xyz +
+    return float4(ambientColor.xyz * textureColorAmbient.xyz + textureColorEmissive.xyz + /*textureColorHeight +*//*f_diffuse **/textureColorDiffuse.xyz * diffuseColor.xyz +
                       f_specular * textureColorSpecular * specularColorAndExponent.xyz, 1);
     
     //return float4(textureColorHeight, 1);
     
  /*   return float4(textureColorSpecular, 1.0f);*/ /*diffuseColor;*/ /*float4(input.texCoord.x, input.texCoord.y, 0.0f, 1.0f);*/
 
+}
+
+struct VertexShaderOutput_BoundingBox
+{
+    float4 position : SV_POSITION;
+};
+
+VertexShaderOutput_BoundingBox VS_BoundingBox_main(float3 position
+                                               : POSITION)
+{
+    VertexShaderOutput_BoundingBox output;
+
+    float4 p4 = mul(projectionMatrix, mul(modelViewMatrix, float4(position, 1.0f)));
+    
+    output.position = p4;
+    return output;
+}
+
+float4 PS_BoundingBox_main(VertexShaderOutput_BoundingBox input)
+    : SV_TARGET
+{
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }

@@ -47,20 +47,33 @@ private:
   /// <param name="commandList">Command list to which we upload the buffer</param>
   void drawScene(const ComPtr<ID3D12GraphicsCommandList>& commandList);
 
+  /// <summary>
+  /// Creates the pipeline for the bounding boxes.
+  /// </summary>
+  void createPipelineBoundingBox();
+
+  /// <summary>
+  /// Draws the bounding boxes of the meshes in the scene.
+  /// </summary>
+  /// <param name="commandList">Command list to which we upload the buffer</param>
+  void drawSceneBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList);
+
   void createSceneConstantBuffer();
 
   void updateSceneConstantBuffer();
 
-  void createMeshConstantBuffer();
+ /* void createMeshConstantBuffer();
 
-  void updateMeshConstantBuffer();
+  void updateMeshConstantBuffer();*/
 
   struct UiData
   {
     f32v3 m_backgroundColor = f32v3(0.25f, 0.25f, 0.25f);
+    bool  m_showBoundingBox = false;
   };
 
   ComPtr<ID3D12PipelineState>      m_pipelineState;
+  ComPtr<ID3D12PipelineState>      m_pipelineStateBoundingBox;
   ComPtr<ID3D12RootSignature>      m_rootSignature;
   std::vector<ConstantBufferD3D12> m_constantBuffers;
   std::vector<ConstantBufferD3D12> m_constantBuffers_Mesh;

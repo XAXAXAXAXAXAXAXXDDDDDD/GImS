@@ -1,5 +1,10 @@
 #pragma once
+#include <d3d12.h>
 #include <gimslib/types.hpp>
+#include <vector>
+#include <wrl.h>
+using Microsoft::WRL::ComPtr;
+
 namespace gims
 {
 /// <summary>

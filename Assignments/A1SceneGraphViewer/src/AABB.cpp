@@ -1,5 +1,8 @@
 #include "AABB.hpp"
+#include <gimslib/contrib/d3dx12/d3dx12.h>
+#include <gimslib/d3d/UploadHelper.hpp>
 #include <iostream>
+#include <vector>
 
 namespace gims
 {
@@ -78,4 +81,5 @@ AABB AABB::getTransformed(f32m4& transformation) const
 
   return result;
 }
+
 } // namespace gims
