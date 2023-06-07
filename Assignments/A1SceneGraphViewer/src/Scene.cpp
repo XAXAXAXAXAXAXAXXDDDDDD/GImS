@@ -54,7 +54,7 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
   }
 }
 
-void addToCommandListImplWireframe(Scene& scene, ui32 nodeIdx, f32m4 transformation,
+void addToCommandListImplBoundingBox(Scene& scene, ui32 nodeIdx, f32m4 transformation,
                                    const ComPtr<ID3D12GraphicsCommandList>& commandList, ui32 modelViewRootParameterIdx)
 {
   if (nodeIdx >= scene.getNumberOfNodes())
@@ -76,7 +76,7 @@ void addToCommandListImplWireframe(Scene& scene, ui32 nodeIdx, f32m4 transformat
 
   for (auto it = currNode.childIndices.begin(); it != currNode.childIndices.end(); it++)
   {
-    addToCommandListImplWireframe(scene, *it, transformation, commandList, modelViewRootParameterIdx);
+    addToCommandListImplBoundingBox(scene, *it, transformation, commandList, modelViewRootParameterIdx);
   }
 }
 } // namespace
@@ -129,6 +129,6 @@ void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandLis
 void Scene::addToCommandListBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
                                       ui32 modelViewRootParameterIdx)
 {
-  addToCommandListImplWireframe(*this, 0, transformation, commandList, modelViewRootParameterIdx);
+  addToCommandListImplBoundingBox(*this, 0, transformation, commandList, modelViewRootParameterIdx);
 }
 } // namespace gims

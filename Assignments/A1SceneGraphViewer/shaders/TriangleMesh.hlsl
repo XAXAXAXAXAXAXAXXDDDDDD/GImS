@@ -33,7 +33,7 @@ cbuffer Material : register(b2)
 }
 
 Texture2D<float3> g_textureAmbient : register(t0);
-Texture2D<float3> g_textureDiffuse : register(t1);
+Texture2D<float4> g_textureDiffuse : register(t1);
 Texture2D<float3> g_textureSpecular : register(t2);
 Texture2D<float3> g_textureEmissive : register(t3);
 Texture2D<float3> g_textureNormal : register(t4);
@@ -68,10 +68,15 @@ float4 PS_main(VertexShaderOutput input)
     float f_specular = pow(max(0.0f, dot(n, h)), specularColorAndExponent.w);
     
     float3 textureColorAmbient = g_textureAmbient.Sample(g_sampler, input.texCoord, 0);
-    float3 textureColorDiffuse = g_textureDiffuse.Sample(g_sampler, input.texCoord, 0);
+    float4 textureColorDiffuse = g_textureDiffuse.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorSpecular = g_textureSpecular.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorEmissive = g_textureEmissive.Sample(g_sampler, input.texCoord, 0);
     float3 textureColorHeight = g_textureNormal.Sample(g_sampler, input.texCoord, 0);
+    
+    if (textureColorDiffuse.w == 0)
+    {
+        discard;
+    }
     
     // float3 textureColor = float3(1.0f, 1.0f, 1.0f);
 
