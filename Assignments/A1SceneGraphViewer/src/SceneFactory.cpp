@@ -109,8 +109,6 @@ Scene SceneGraphFactory::createFromAssImpScene(const std::filesystem::path      
   f32v3 vec[]        = {f32v3(0.0f, 0.0f, 0.0f)};
   outputScene.m_aabb = AABB(vec, 1);
 
-  // outputScene.m_srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
   const auto absolutePath = std::filesystem::weakly_canonical(pathToScene);
   if (!std::filesystem::exists(absolutePath))
   {
@@ -156,30 +154,6 @@ void SceneGraphFactory::createMeshes(aiScene const* const inputScene, const ComP
   }
 }
 
-inline f32m4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
-{
-  f32m4 to;
-
-  to[0][0] = (f32)from->a1;
-  to[0][1] = (f32)from->b1;
-  to[0][2] = (f32)from->c1;
-  to[0][3] = (f32)from->d1;
-  to[1][0] = (f32)from->a2;
-  to[1][1] = (f32)from->b2;
-  to[1][2] = (f32)from->c2;
-  to[1][3] = (f32)from->d2;
-  to[2][0] = (f32)from->a3;
-  to[2][1] = (f32)from->b3;
-  to[2][2] = (f32)from->c3;
-  to[2][3] = (f32)from->d3;
-  to[3][0] = (f32)from->a4;
-  to[3][1] = (f32)from->b4;
-  to[3][2] = (f32)from->c4;
-  to[3][3] = (f32)from->d4;
-
-  return to;
-}
-
 ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outputScene, aiNode const* const inputNode)
 {
   ui32 currNodeIdx = outputScene.getNumberOfNodes();
@@ -200,32 +174,6 @@ ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outp
   // Assignment 4
   return currNodeIdx;
 }
-
-// ui32 SceneGraphFactory::createNodes(aiScene const* const inputScene, Scene& outputScene, aiNode const* const
-// inputNode)
-//{
-//   ui32 currNodeIdx = outputScene.getNumberOfNodes();
-//
-//   std::vector<ui32> childIndices;
-//   childIndices.resize(inputNode->mNumChildren);
-//   std::iota(childIndices.begin(), childIndices.end(), currNodeIdx + 1);
-//
-//   std::vector<ui32> meshIndices(inputNode->mMeshes, inputNode->mMeshes + inputNode->mNumMeshes);
-//
-//   f32m4 trafo = aiMatrix4x4ToGlm(&inputNode->mTransformation);
-//
-//   Scene::Node n = Scene::Node {trafo, meshIndices, childIndices};
-//   outputScene.m_nodes.push_back(n);
-//
-//   // TODO: do not write node two times, deduce the current index and number of children for vector
-//
-//   for (ui32 i = 0; i < inputNode->mNumChildren; i++)
-//   {
-//     createNodes(inputScene, outputScene, inputNode->mChildren[i]);
-//   }
-//
-//   return currNodeIdx;
-// }
 
 void SceneGraphFactory::computeSceneAABB(Scene& scene, AABB& aabb, ui32 nodeIdx, f32m4 transformation)
 {
@@ -306,8 +254,6 @@ void SceneGraphFactory::createMaterials(aiScene const* const                    
     desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     throwIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srv)));
 
-    // const auto srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
     const auto material = inputScene->mMaterials[i];
 
     aiColor3D color_diffuse(0.f, 0.f, 0.f);
@@ -319,14 +265,9 @@ void SceneGraphFactory::createMaterials(aiScene const* const                    
     aiColor3D color_ambient(0.f, 0.f, 0.f);
     material->Get(AI_MATKEY_COLOR_AMBIENT, color_ambient);
 
-    // material->GetTexture(aiTextureType_AMBIENT, i, &path);
-
-    // const auto texturePathCstr = path.C_Str();
-    // const auto textureIter     = textureFileNameToTextureIndex.find(texturePathCstr);
-
     Scene::Material m;
     // set descriptor heap for textures
-    m.srvDescriptorHeap               = srv;
+    m.srvDescriptorHeap = srv;
 
     // create material constant buffer
     Scene::MaterialConstantBuffer mCB = {};
@@ -352,23 +293,4 @@ void SceneGraphFactory::createMaterials(aiScene const* const                    
   }
   // Assignment 9
 }
-
-// void SceneGraphViewerApp::createSceneConstantBuffer()
-//{
-//   const PerSceneConstants::ConstantBuffer cb         = {};
-//   const auto                              frameCount = getDX12AppConfig().frameCount;
-//   m_constantBuffers.resize(frameCount);
-//   for (ui32 i = 0; i < frameCount; i++)
-//   {
-//     m_constantBuffers[i] = ConstantBufferD3D12(cb, getDevice());
-//   }
-// }
-//
-// void SceneGraphViewerApp::updateSceneConstantBuffer()
-//{
-//   PerSceneConstants::ConstantBuffer cb {};
-//   cb.projectionMatrix =
-//       glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 1.0f / 256.0f, 256.0f);
-//   m_constantBuffers[getFrameIndex()].upload(&cb);
-// }
 } // namespace gims

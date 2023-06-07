@@ -74,7 +74,7 @@ public:
   /// <returns>The input element descriptor.</returns>
   static const std::vector<D3D12_INPUT_ELEMENT_DESC>& getInputElementDescriptors();
 
-  TriangleMeshD3D12();
+  TriangleMeshD3D12();                  
   TriangleMeshD3D12(const TriangleMeshD3D12& other)                = default;
   TriangleMeshD3D12(TriangleMeshD3D12&& other) noexcept            = default;
   TriangleMeshD3D12& operator=(const TriangleMeshD3D12& other)     = default;
@@ -93,9 +93,9 @@ private:
   //! Input element descriptor defining the vertex format.
   static const std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs;
 
-  ComPtr<ID3D12Resource>   m_vertexBufferBoundingBox; //! The vertex buffer on the GPU.
+  ComPtr<ID3D12Resource>   m_vertexBufferBoundingBox; //! The vertex buffer of the bounding box on the GPU.
   D3D12_VERTEX_BUFFER_VIEW m_vertexBufferViewBoundingBox;
-  ComPtr<ID3D12Resource>   m_indexBufferBoundingBox; //! The index buffer on the GPU.
+  ComPtr<ID3D12Resource>   m_indexBufferBoundingBox; //! The index buffer of the bounding box on the GPU.
   D3D12_INDEX_BUFFER_VIEW  m_indexBufferViewBoundingBox;
   //! Input element descriptor defining the vertex format.
   static const std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescsBoundingBox;

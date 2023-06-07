@@ -42,13 +42,12 @@ TriangleMeshD3D12::TriangleMeshD3D12(f32v3 const* const positions, f32v3 const* 
   {
     if (!textureCoordinates)
     {
-      m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], f32v3(0.0f, 0.0f, 0.0f)};
+      m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], f32v2(0.0f, 0.0f)};
     }
     else
     {
       m_vertexBufferCPU[i] = Vertex {positions[i], normals[i], textureCoordinates[i]};
     }
-    /* std::cout << "Position [" << i << "]: " << glm::to_string(positions[i]) << "\n"; */
   }
 
   // create upload helper
@@ -85,11 +84,6 @@ void TriangleMeshD3D12::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>
   commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
   commandList->IASetIndexBuffer(&m_indexBufferView);
 
-  // std::cout << "Anzahl gezeichnete Indizes: " << m_nIndices << "\n";
-  // std::cout << m_vertexBufferView.BufferLocation << "\n";
-  // std::cout << m_indexBufferView.BufferLocation << "\n";
-  // std::cout << m_vertexBuffer->GetGPUVirtualAddress() << "\n";
-
   commandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
 }
 
@@ -115,6 +109,8 @@ TriangleMeshD3D12::TriangleMeshD3D12()
     , m_materialIndex((ui32)-1)
     , m_vertexBufferView()
     , m_indexBufferView()
+    , m_indexBufferViewBoundingBox()
+    , m_vertexBufferViewBoundingBox()
 {
 }
 
@@ -129,7 +125,7 @@ const std::vector<D3D12_INPUT_ELEMENT_DESC>& TriangleMeshD3D12::getInputElementD
 }
 
 void TriangleMeshD3D12::createVertexAndIndexBufferBoundingBox(const ComPtr<ID3D12Device>&       device,
-                                                            const ComPtr<ID3D12CommandQueue>& commandQueue)
+                                                              const ComPtr<ID3D12CommandQueue>& commandQueue)
 {
   f32v3 p0 = f32v3(getAABB().getUpperRightTop().x, getAABB().getUpperRightTop().y, getAABB().getUpperRightTop().z);
   f32v3 p1 = f32v3(getAABB().getUpperRightTop().x, getAABB().getLowerLeftBottom().y, getAABB().getUpperRightTop().z);

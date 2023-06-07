@@ -25,11 +25,8 @@ AABB::AABB(f32v3 const* const positions, ui32 nPositions)
 }
 f32m4 AABB::getNormalizationTransformation() const
 {
-  f32 diffX = getUpperRightTop().x - getLowerLeftBottom().x;
-  f32 diffY = getUpperRightTop().y - getLowerLeftBottom().y;
-  f32 diffZ = getUpperRightTop().z - getLowerLeftBottom().z;
-
-  f32 diffLength = std::max(std::max(diffX, diffY), diffZ);
+  f32v3 diff       = getUpperRightTop() - getLowerLeftBottom();
+  f32   diffLength = glm::compMax(diff);
 
   f32v3 translateVec = (getLowerLeftBottom() + getUpperRightTop()) / 2;
   f32m4 translateMat = glm::translate(-translateVec);
@@ -57,25 +54,10 @@ const f32v3& AABB::getUpperRightTop() const
 }
 AABB AABB::getTransformed(f32m4& transformation) const
 {
-  /*f32v3 p1 = transformation * f32v4(getUpperRightTop().x, getUpperRightTop().y, getUpperRightTop().z, 1.0f);
-  f32v3 p2 = transformation * f32v4(getUpperRightTop().x, getUpperRightTop().y, getLowerLeftBottom().z, 1.0f);
+  f32v3 lowerLeftTransformed  = transformation * f32v4(getLowerLeftBottom(), 1.0f);
+  f32v3 upperRightTransformed = transformation * f32v4(getUpperRightTop(), 1.0f);
 
-  f32v3 p3 = transformation * f32v4(getUpperRightTop().x, getLowerLeftBottom().y, getUpperRightTop().z, 1.0f);
-  f32v3 p4 = transformation * f32v4(getUpperRightTop().x, getLowerLeftBottom().y, getLowerLeftBottom().z, 1.0f);
-
-  f32v3 p5 = transformation * f32v4(getLowerLeftBottom().x, getLowerLeftBottom().y, getUpperRightTop().z, 1.0f);
-  f32v3 p6 = transformation * f32v4(getLowerLeftBottom().x, getLowerLeftBottom().y, getLowerLeftBottom().z, 1.0f);
-
-  f32v3 p7 = transformation * f32v4(getLowerLeftBottom().x, getUpperRightTop().y, getUpperRightTop().z, 1.0f);
-  f32v3 p8 = transformation * f32v4(getLowerLeftBottom().x, getUpperRightTop().y, getLowerLeftBottom().z, 1.0f);
-
-  f32v3 posVec[] = {p1, p2, p3, p4, p5, p6, p7, p8};
-
-  AABB result(posVec, 8);*/
-  f32v3 p7 = transformation * f32v4(getLowerLeftBottom(), 1.0f);
-  f32v3 p8 = transformation * f32v4(getUpperRightTop(), 1.0f);
-
-  f32v3 posVec[] = {p7, p8};
+  f32v3 posVec[] = {lowerLeftTransformed, upperRightTransformed};
 
   AABB result(posVec, 2);
 

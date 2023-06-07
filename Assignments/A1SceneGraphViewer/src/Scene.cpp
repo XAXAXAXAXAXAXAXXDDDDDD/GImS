@@ -29,20 +29,10 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
     commandList->SetGraphicsRootConstantBufferView(
         materialConstantsRootParameterIdx, material.materialConstantBuffer.getResource()->GetGPUVirtualAddress());
 
-    // Implement me: Set Descriptor  Heap
     commandList->SetDescriptorHeaps(1, material.srvDescriptorHeap.GetAddressOf());
 
-    // Implement me: Bind the textures.
     auto GPU_base_handle = material.srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
     commandList->SetGraphicsRootDescriptorTable(srvRootParameterIdx, GPU_base_handle);
-
-    // for (ui32 i = 1; i < 5; i++)
-    //{
-    //   CD3DX12_GPU_DESCRIPTOR_HANDLE GPU_offset_i_handle;
-    //   GPU_offset_i_handle.InitOffsetted(GPU_base_handle, i, scene.getSrvDescriptorSize());
-
-    //  commandList->SetGraphicsRootDescriptorTable(srvRootParameterIdx + i, GPU_offset_i_handle);
-    //}
 
     scene.getMesh(*it).addToCommandList(commandList);
   }
@@ -55,7 +45,8 @@ void addToCommandListImpl(Scene& scene, ui32 nodeIdx, f32m4 transformation,
 }
 
 void addToCommandListImplBoundingBox(Scene& scene, ui32 nodeIdx, f32m4 transformation,
-                                   const ComPtr<ID3D12GraphicsCommandList>& commandList, ui32 modelViewRootParameterIdx)
+                                     const ComPtr<ID3D12GraphicsCommandList>& commandList,
+                                     ui32                                     modelViewRootParameterIdx)
 {
   if (nodeIdx >= scene.getNumberOfNodes())
   {
@@ -113,11 +104,6 @@ const AABB& Scene::getAABB() const
   return m_aabb;
 }
 
-// const ui32 Scene::getSrvDescriptorSize() const
-//{
-//   return m_srvDescriptorSize;
-// }
-
 void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
                              ui32 modelViewRootParameterIdx, ui32 materialConstantsRootParameterIdx,
                              ui32 srvRootParameterIdx)
@@ -126,8 +112,8 @@ void Scene::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandLis
                        materialConstantsRootParameterIdx, srvRootParameterIdx);
 }
 
-void Scene::addToCommandListBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList, const f32m4 transformation,
-                                      ui32 modelViewRootParameterIdx)
+void Scene::addToCommandListBoundingBox(const ComPtr<ID3D12GraphicsCommandList>& commandList,
+                                        const f32m4 transformation, ui32 modelViewRootParameterIdx)
 {
   addToCommandListImplBoundingBox(*this, 0, transformation, commandList, modelViewRootParameterIdx);
 }

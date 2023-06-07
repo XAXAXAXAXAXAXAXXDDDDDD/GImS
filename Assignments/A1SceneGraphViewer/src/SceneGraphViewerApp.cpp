@@ -21,7 +21,6 @@ SceneGraphViewerApp::SceneGraphViewerApp(const DX12AppConfig config, const std::
   m_shader = HLSLProgram(L"../../../Assignments/A1SceneGraphViewer/Shaders/TriangleMesh.hlsl", "VS_main", "PS_main");
   createRootSignature();
   createSceneConstantBuffer();
-  // createMeshConstantBuffer();
   createPipeline();
   createPipelineBoundingBox();
 }
@@ -61,7 +60,7 @@ void SceneGraphViewerApp::onDraw()
 
   drawScene(commandList);
 
-  // now draw wireframe
+  // now draw bounding box
   if (m_uiData.m_showBoundingBox)
   {
     drawSceneBoundingBox(commandList);
@@ -85,27 +84,17 @@ void SceneGraphViewerApp::createRootSignature()
   CD3DX12_ROOT_PARAMETER parameters[4] {};
 
   CD3DX12_DESCRIPTOR_RANGE range1 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
-  // parameters[3].InitAsDescriptorTable(1, &range);
-
   CD3DX12_DESCRIPTOR_RANGE range2 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1};
-  // parameters[4].InitAsDescriptorTable(1, &range2);
-
   CD3DX12_DESCRIPTOR_RANGE range3 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2};
-  // parameters[5].InitAsDescriptorTable(1, &range3);
-
   CD3DX12_DESCRIPTOR_RANGE range4 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3};
-  // parameters[6].InitAsDescriptorTable(1, &range4);
-
   CD3DX12_DESCRIPTOR_RANGE range5 {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4};
-  /*parameters[7].InitAsDescriptorTable(1, &range5);*/
 
   CD3DX12_DESCRIPTOR_RANGE ranges[5] = {range1, range2, range3, range4, range5};
-
-  parameters[3].InitAsDescriptorTable(5, ranges);
 
   parameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
   parameters[1].InitAsConstants(16, 1, D3D12_SHADER_VISIBILITY_ALL);
   parameters[2].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_ALL);
+  parameters[3].InitAsDescriptorTable(5, ranges);
 
   D3D12_STATIC_SAMPLER_DESC sampler = {};
   sampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -123,8 +112,7 @@ void SceneGraphViewerApp::createRootSignature()
   sampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
 
   CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-  descRootSignature.Init(/*8*/ 4, parameters, 1, &sampler,
-                         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+  descRootSignature.Init(4, parameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
   ComPtr<ID3DBlob> rootBlob, errorBlob;
   D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
@@ -164,25 +152,17 @@ void SceneGraphViewerApp::drawScene(const ComPtr<ID3D12GraphicsCommandList>& cmd
 {
   updateSceneConstantBuffer();
 
-  // updateMeshConstantBuffer();
-
-  // Assignment 2: Uncomment after successfull implementation.
-  const auto cb = m_constantBuffers[getFrameIndex()].getResource()->GetGPUVirtualAddress();
-  // const auto cb_mesh      = m_constantBuffers_Mesh[getFrameIndex()].getResource()->GetGPUVirtualAddress();
+  const auto cb           = m_constantBuffers[getFrameIndex()].getResource()->GetGPUVirtualAddress();
   const auto cameraMatrix = m_examinerController.getTransformationMatrix();
-
-  // Assignment 6
 
   cmdLst->SetPipelineState(m_pipelineState.Get());
 
-  // Assignment 2: Uncomment after successfull implementation.
   cmdLst->SetGraphicsRootSignature(m_rootSignature.Get());
   cmdLst->SetGraphicsRootConstantBufferView(0, cb);
-  // cmdLst->SetGraphicsRootConstantBufferView(1, cb_mesh);
 
-  f32m4 transformation = cameraMatrix * m_scene.getAABB().getNormalizationTransformation();
+  f32m4 modelViewMatrix = cameraMatrix * m_scene.getAABB().getNormalizationTransformation();
 
-  m_scene.addToCommandList(cmdLst, transformation, 1, 2, 3);
+  m_scene.addToCommandList(cmdLst, modelViewMatrix, 1, 2, 3);
 }
 
 #pragma region Bounding Box
@@ -208,7 +188,7 @@ void SceneGraphViewerApp::drawSceneBoundingBox(const ComPtr<ID3D12GraphicsComman
 void SceneGraphViewerApp::createPipelineBoundingBox()
 {
   HLSLProgram shaderBoundingBox = HLSLProgram(L"../../../Assignments/A1SceneGraphViewer/Shaders/TriangleMesh.hlsl",
-                                            "VS_BoundingBox_main", "PS_BoundingBox_main");
+                                              "VS_BoundingBox_main", "PS_BoundingBox_main");
 
   waitForGPU();
   const auto inputElementDescs = TriangleMeshD3D12::getInputElementDescriptorsBoundingBox();
@@ -246,15 +226,6 @@ struct ConstantBuffer
 
 } // namespace PerSceneConstants
 
-// namespace PerMeshConstants
-//{
-// struct ConstantBuffer
-//{
-//   f32m4 modelViewMatrix;
-// };
-//
-// } // namespace PerMeshConstants
-
 void SceneGraphViewerApp::createSceneConstantBuffer()
 {
   const PerSceneConstants::ConstantBuffer cb         = {};
@@ -273,22 +244,3 @@ void SceneGraphViewerApp::updateSceneConstantBuffer()
       glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 1.0f / 256.0f, 256.0f);
   m_constantBuffers[getFrameIndex()].upload(&cb);
 }
-
-// void SceneGraphViewerApp::createMeshConstantBuffer()
-//{
-//   const PerMeshConstants::ConstantBuffer cb         = {};
-//   const auto                             frameCount = getDX12AppConfig().frameCount;
-//   m_constantBuffers_Mesh.resize(frameCount);
-//   for (ui32 i = 0; i < frameCount; i++)
-//   {
-//     m_constantBuffers_Mesh[i] = ConstantBufferD3D12(cb, getDevice());
-//   }
-// }
-//
-// void SceneGraphViewerApp::updateMeshConstantBuffer()
-//{
-//   PerMeshConstants::ConstantBuffer cb {};
-//   cb.modelViewMatrix =
-//       m_examinerController.getTransformationMatrix() * m_scene.getMesh(1).getAABB().getNormalizationTransformation();
-//   m_constantBuffers_Mesh[getFrameIndex()].upload(&cb);
-// }

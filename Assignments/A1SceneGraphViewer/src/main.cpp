@@ -13,10 +13,10 @@ int main(int /* argc*/, char /* **argv */)
   config.title    = L"D3D12 Assimp Viewer";
   try
   {
-    // const std::filesystem::path path = "../../../data/NobleCraftsman/scene.gltf";
+    const std::filesystem::path path = "../../../data/NobleCraftsman/scene.gltf";
     // const std::filesystem::path path = "../../../data/ww2_cityscene_-_carentan_inspired/scene.gltf";
-    const std::filesystem::path path = "../../../data/sponza/sponza.obj";
-    SceneGraphViewerApp         app(config, path);
+    // const std::filesystem::path path = "../../../data/sponza/sponza.obj";
+    SceneGraphViewerApp app(config, path);
     app.run();
   }
   catch (const std::exception& e)
