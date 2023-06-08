@@ -86,6 +86,7 @@ project_options(
 
 add_subdirectory(./Assignments)
 add_subdirectory(./Tutorials)
+add_subdirectory(./Project)
 add_subdirectory(./gimslib)
 
 
