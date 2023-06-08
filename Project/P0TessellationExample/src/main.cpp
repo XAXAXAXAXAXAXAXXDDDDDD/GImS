@@ -7,12 +7,12 @@ using namespace gims;
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.useVSync = false;
-  config.debug    = true;
+  config.title    = L"Tutorial 2 Triangle";
+  config.useVSync = true;
   try
   {
-    MeshViewer x(config);
-    x.run();
+    TriangleApp app(config);
+    app.run();
   }
   catch (const std::exception& e)
   {
@@ -22,6 +22,5 @@ int main(int /* argc*/, char /* **argv */)
   {
     DX12Util::reportLiveObjects();
   }
-
   return 0;
 }

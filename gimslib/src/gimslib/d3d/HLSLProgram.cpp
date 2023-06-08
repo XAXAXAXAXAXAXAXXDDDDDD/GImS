@@ -39,16 +39,30 @@ HLSLProgram::HLSLProgram()
 }
 
 HLSLProgram::HLSLProgram(std::filesystem::path pathToShader, char const* const vertexShaderMain,
-                         char const* const pixelShaderMain)
+                         char const* const pixelShaderMain, char const* const hullShaderMain,
+                         char const* const domainShaderMain)
 {
   const auto absolutePath = std::filesystem::weakly_canonical(pathToShader);
+
   if (!std::filesystem::exists(absolutePath))
   {
     throw std::exception((absolutePath.string() + std::string(" does not exist.")).c_str());
   }
+
   m_vertexShader = ::compileShader(absolutePath, vertexShaderMain, "vs_5_1");
   m_pixelShader  = ::compileShader(absolutePath, pixelShaderMain, "ps_5_1");
+
+  if (hullShaderMain)
+  {
+    m_hullShader = ::compileShader(absolutePath, hullShaderMain, "hs_5_1");
+  }
+
+  if (domainShaderMain)
+  {
+    m_domainShader = ::compileShader(absolutePath, domainShaderMain, "ds_5_1");
+  }
 }
+
 const ComPtr<ID3DBlob>& HLSLProgram::getVertexShader() const
 {
   return m_vertexShader;
@@ -56,5 +70,14 @@ const ComPtr<ID3DBlob>& HLSLProgram::getVertexShader() const
 const ComPtr<ID3DBlob>& HLSLProgram::getPixelShader() const
 {
   return m_pixelShader;
+}
+
+const ComPtr<ID3DBlob>& HLSLProgram::getHullShader() const
+{
+  return m_hullShader;
+}
+const ComPtr<ID3DBlob>& HLSLProgram::getDomainShader() const
+{
+  return m_domainShader;
 }
 } // namespace gims
