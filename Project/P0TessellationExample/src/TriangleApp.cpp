@@ -2,19 +2,23 @@
 
 void TriangleApp::createPipeline()
 {
-  m_hlslProgram = HLSLProgram(L"../../../Project/P0TessellationExample/Shaders/TriangleMesh.hlsl", "VS_main", "PS_main");
+  m_hlslProgram = HLSLProgram(L"../../../Project/P0TessellationExample/Shaders/TriangleMesh.hlsl", "VS_main", "PS_main",
+                              "HS_main", "DS_main");
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
   psoDesc.InputLayout                        = {};
   psoDesc.pRootSignature                     = m_rootSignature.Get();
   psoDesc.VS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getVertexShader().Get());
+  psoDesc.HS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getHullShader().Get());
+  psoDesc.DS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getDomainShader().Get());
   psoDesc.PS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getPixelShader().Get());
   psoDesc.RasterizerState                    = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+  psoDesc.RasterizerState.FillMode           = D3D12_FILL_MODE_WIREFRAME;
   psoDesc.BlendState                         = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
   psoDesc.DepthStencilState.DepthEnable      = FALSE;
   psoDesc.DepthStencilState.StencilEnable    = FALSE;
   psoDesc.SampleMask                         = UINT_MAX;
-  psoDesc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+  psoDesc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
   psoDesc.NumRenderTargets                   = 1;
   psoDesc.SampleDesc.Count                   = 1;
   psoDesc.RTVFormats[0]                      = getRenderTarget()->GetDesc().Format;
@@ -34,7 +38,6 @@ void TriangleApp::createRootSignature()
                                    IID_PPV_ARGS(&m_rootSignature));
 }
 
-
 void TriangleApp::onDraw()
 {
   const auto commandList = getCommandList();
@@ -51,32 +54,32 @@ void TriangleApp::onDraw()
 
   commandList->SetPipelineState(m_pipelineState.Get());
   commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
   commandList->DrawInstanced(3, 1, 0, 0);
 }
 
 void TriangleApp::onDrawUI()
 {
- // const auto imGuiFlags = m_examinerController.active() ? ImGuiWindowFlags_NoInputs : ImGuiWindowFlags_None;
+  // const auto imGuiFlags = m_examinerController.active() ? ImGuiWindowFlags_NoInputs : ImGuiWindowFlags_None;
   ImGui::Begin("Information", nullptr);
   ImGui::Text("Frametime: %f", 1.0f / ImGui::GetIO().Framerate * 1000.0f);
   ImGui::End();
 
-  //ImGui::Begin("Configuration", nullptr, imGuiFlags);
-  //f32v3 col = f32v3(1.0f, 1.0f, 1.0f);
-  //ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor.x);
-  //ImGui::Checkbox("Back-Face Culling", &m_uiData.m_useBackFaceCulling);
-  //ImGui::Checkbox("Overlay WireFrame", &m_uiData.m_overLayWireFrame);
-  //ImGui::ColorEdit3("WireFrame Color", &m_uiData.m_wireFrameColor.x);
-  //ImGui::Checkbox("Two-Sided Lighting", &m_uiData.m_useTwoSidedLighting);
-  //ImGui::Checkbox("Use Texture", &m_uiData.m_useTexture);
-  //ImGui::ColorEdit3("Ambient", &m_uiData.m_ambient.x);
-  //ImGui::ColorEdit3("Diffuse", &m_uiData.m_diffuse.x);
-  //ImGui::ColorEdit3("Specular", &m_uiData.m_specular.x);
-  //ImGui::SliderFloat("Exponent", &m_uiData.m_specularExponent, 0.0f, 512.0f);
-  //ImGui::SliderFloat("FOV", &m_uiData.m_fov, 1.0f, 180.0f);
-  //ImGui::SliderFloat("Near Plane", &m_uiData.m_zNear, 0.0f, 100.0f);
-  //ImGui::SliderFloat("Far Plane", &m_uiData.m_zFar, 0.0f, 100.0f);
-  //ImGui::SliderFloat3("Light Direction", &m_uiData.m_lightDirection.x, -1.0f, 1.0f);
-  //ImGui::End();
+  // ImGui::Begin("Configuration", nullptr, imGuiFlags);
+  // f32v3 col = f32v3(1.0f, 1.0f, 1.0f);
+  // ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor.x);
+  // ImGui::Checkbox("Back-Face Culling", &m_uiData.m_useBackFaceCulling);
+  // ImGui::Checkbox("Overlay WireFrame", &m_uiData.m_overLayWireFrame);
+  // ImGui::ColorEdit3("WireFrame Color", &m_uiData.m_wireFrameColor.x);
+  // ImGui::Checkbox("Two-Sided Lighting", &m_uiData.m_useTwoSidedLighting);
+  // ImGui::Checkbox("Use Texture", &m_uiData.m_useTexture);
+  // ImGui::ColorEdit3("Ambient", &m_uiData.m_ambient.x);
+  // ImGui::ColorEdit3("Diffuse", &m_uiData.m_diffuse.x);
+  // ImGui::ColorEdit3("Specular", &m_uiData.m_specular.x);
+  // ImGui::SliderFloat("Exponent", &m_uiData.m_specularExponent, 0.0f, 512.0f);
+  // ImGui::SliderFloat("FOV", &m_uiData.m_fov, 1.0f, 180.0f);
+  // ImGui::SliderFloat("Near Plane", &m_uiData.m_zNear, 0.0f, 100.0f);
+  // ImGui::SliderFloat("Far Plane", &m_uiData.m_zFar, 0.0f, 100.0f);
+  // ImGui::SliderFloat3("Light Direction", &m_uiData.m_lightDirection.x, -1.0f, 1.0f);
+  // ImGui::End();
 }
