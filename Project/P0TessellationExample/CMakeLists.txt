@@ -15,7 +15,7 @@ source_group("Shaders" FILES ${P0TessellationExample_SHADER_SOURCE})
 set_source_files_properties(${P0TessellationExample_SHADER_SOURCE} PROPERTIES VS_TOOL_OVERRIDE "None")
 
 # Source files
-set(P0TessellationExample_PROJECT_SOURCE "./src/main.cpp" "./src/TriangleApp.cpp" "./include/TriangleApp.h")
+set(P0TessellationExample_PROJECT_SOURCE "./src/main.cpp" "./src/PatchApp.cpp" "./include/PatchApp.h")
 
 add_executable(P0TessellationExample ${P0TessellationExample_PROJECT_SOURCE} ${P0TessellationExample_SHADER_SOURCE})
 

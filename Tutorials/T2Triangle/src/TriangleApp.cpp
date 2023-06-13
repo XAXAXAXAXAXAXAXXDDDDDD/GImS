@@ -6,10 +6,10 @@
 #include <iostream>
 using namespace gims;
 
-class TriangleApp : public DX12App
+class PatchApp : public DX12App
 {
 private:
-  gims::HLSLProgram           m_hlslProgram;
+  gims::HLSLProgram           m_hlslProgramSolid;
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12RootSignature> m_rootSignature;
 
@@ -27,14 +27,14 @@ private:
 
   void createPipeline()
   {
-    m_hlslProgram =
+    m_hlslProgramSolid =
         HLSLProgram(L"../../../Tutorials/T2Triangle/Shaders/Triangle.hlsl", "VS_main", "PS_main");
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout                        = {};
     psoDesc.pRootSignature                     = m_rootSignature.Get();
-    psoDesc.VS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getVertexShader().Get());
-    psoDesc.PS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgram.getPixelShader().Get());
+    psoDesc.VS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgramSolid.getVertexShader().Get());
+    psoDesc.PS                                 = CD3DX12_SHADER_BYTECODE(m_hlslProgramSolid.getPixelShader().Get());
     psoDesc.RasterizerState                    = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.BlendState                         = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState.DepthEnable      = FALSE;
@@ -49,7 +49,7 @@ private:
   }
 
 public:
-  TriangleApp(const DX12AppConfig createInfo)
+  PatchApp(const DX12AppConfig createInfo)
       : DX12App(createInfo)
   {
     createRootSignature();
@@ -84,7 +84,7 @@ int main(int /* argc*/, char /* **argv */)
   config.useVSync = true;
   try
   {
-    TriangleApp app(config);
+    PatchApp app(config);
     app.run();
   }
   catch (const std::exception& e)

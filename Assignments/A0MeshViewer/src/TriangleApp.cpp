@@ -209,7 +209,7 @@ void MeshViewer::createPipeline(bool isWireFrame, D3D12_CULL_MODE cullMode, ComP
   }
 
   psoDesc.RasterizerState.CullMode = cullMode;
- 
+
   psoDesc.BlendState                       = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
   psoDesc.DepthStencilState                = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
   psoDesc.SampleMask                       = UINT_MAX;
