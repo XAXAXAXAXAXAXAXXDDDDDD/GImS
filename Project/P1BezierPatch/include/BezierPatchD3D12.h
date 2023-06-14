@@ -27,8 +27,8 @@ public:
   /// <param name="materialIndex">Material index.</param>
   /// <param name="device">Device on which the GPU buffers should be created.</param>
   /// <param name="commandQueue">Command queue used to copy the data from the GPU to the GPU.</param>
-  BezierPatchD3D12(const f32v3* positions, ui32 nVertices, const ComPtr<ID3D12Device>& device,
-                   const ComPtr<ID3D12CommandQueue>& commandQueue);
+  BezierPatchD3D12(const f32v3* positions, const ui32 nVertices, const ui32* indexBuffer, const ui32 nIndices,
+                   const ComPtr<ID3D12Device>& device, const ComPtr<ID3D12CommandQueue>& commandQueue);
 
   /// <summary>
   /// Adds the commands neccessary for rendering this triangle mesh to the provided commandList.
@@ -53,6 +53,11 @@ private:
   ui32                     m_vertexBufferSize; //! Vertex buffer size in bytes.
   ComPtr<ID3D12Resource>   m_vertexBuffer;     //! The vertex buffer on the GPU.
   D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+  ui32                    m_nIndices;        //! Number of indices in the index buffer.
+  ui32                    m_indexBufferSize; //! Index buffer size in bytes.
+  ComPtr<ID3D12Resource>  m_indexBuffer;     //! The index buffer on the GPU.
+  D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
   //! Input element descriptor defining the vertex format.
   static const std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs;

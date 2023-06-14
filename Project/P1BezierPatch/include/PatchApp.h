@@ -1,5 +1,6 @@
 #include "BezierPatchD3D12.h"
 #include "MorbiusStrip.h"
+#include "Teapot.h"
 #include <gimslib/d3d/DX12App.hpp>
 #include <gimslib/d3d/DX12Util.hpp>
 #include <gimslib/d3d/HLSLProgram.hpp>
@@ -43,8 +44,8 @@ f32m4 getNormalizationTransformation(f32v3 const* const positions, ui32 nPositio
       max_z = positions[i].z;
   }
   f32v3 translation_vec = allVals / nPositions;
-  f32m4 translation_mat = glm::transpose(
-      glm::translate(f32m4(1), translation_vec)); /* f32m4(f32v4(1.0f, 0.0f, 0.0f, 0.0f), f32v4(0.0f, 1.0f, 0.0f, 0.0f),
+  f32m4 translation_mat =
+      glm::translate(f32m4(1), translation_vec); /* f32m4(f32v4(1.0f, 0.0f, 0.0f, 0.0f), f32v4(0.0f, 1.0f, 0.0f, 0.0f),
                                 f32v4(0.0f, 0.0f, 1.0f, 0.0f), f32v4(-translation_vec, 1.0f));*/
 
   // dann max min der längsten Achse abbilden auf -0.5 ... 0.5 --> Skalierung
@@ -52,14 +53,15 @@ f32m4 getNormalizationTransformation(f32v3 const* const positions, ui32 nPositio
                                      std::max(std::abs(min_y) + std::abs(max_y), std::abs(min_z) + std::abs(max_z)));
 
   f32m4 scale_mat =
-      glm::transpose(glm::scale(f32m4(1), f32v3(scale_factor))); /* (f32v4(scale_factor, 0.0f, 0.0f, 0.0f), f32v4(0.0f,
-             scale_factor, 0.0f, 0.0f),
-                          f32v4(0.0f, 0.0f, scale_factor, 0.0f), f32v4(0.0f, 0.0f, 0.0f, 1.0f));*/
+      /*glm::transpose*/ (
+          glm::scale(f32m4(1), f32v3(scale_factor))); /* (f32v4(scale_factor, 0.0f, 0.0f, 0.0f), f32v4(0.0f,
+scale_factor, 0.0f, 0.0f),
+           f32v4(0.0f, 0.0f, scale_factor, 0.0f), f32v4(0.0f, 0.0f, 0.0f, 1.0f));*/
 
   f32m4 invertZ_mat = glm::transpose(glm::scale(f32m4(1), f32v3(1, 1, -1)));
 
   // Scale * Translate
-  return /*invertZ_mat **/ scale_mat * translation_mat;
+  return /*invertZ_mat **/ /*glm::transpose*/ scale_mat * translation_mat;
 }
 } // namespace
 
@@ -92,7 +94,9 @@ private:
 
   struct ConstantBuffer
   {
-    f32m4 mvp;
+    f32m4 mv;
+    f32m4 p;
+    f32m4 pIT;
     f32   tessFactor;
   };
   std::vector<ComPtr<ID3D12Resource>> m_constantBuffers;
@@ -109,9 +113,13 @@ public:
     m_hlslProgramWireframe = HLSLProgram(L"../../../Project/P1BezierPatch/Shaders/BezierPatch.hlsl", "VS_main",
                                          "PS_main_Wireframe", "HS_main", "DS_main");
 
-    m_bezierPatch = BezierPatchD3D12(g_MobiusStrip, 64, getDevice(), getCommandQueue());
+    fillCorrPatch();
+
+    m_bezierPatch = BezierPatchD3D12(teapotVertices, kTeapotNumVertices, teapotPatchesCorr, 16 * kTeapotNumPatches,
+                                     getDevice(), getCommandQueue());
     m_examinerController.setTranslationVector(f32v3(0, 0, 3));
-    m_normalizationTransformation = getNormalizationTransformation(g_MobiusStrip, 64);
+    m_normalizationTransformation = getNormalizationTransformation(teapotVertices, kTeapotNumVertices);
+    // glm::identity<f32m4>();
 
     createRootSignature();
 

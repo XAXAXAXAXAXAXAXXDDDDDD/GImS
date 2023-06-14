@@ -15,7 +15,7 @@ source_group("Shaders" FILES ${P1BezierPatch_SHADER_SOURCE})
 set_source_files_properties(${P1BezierPatch_SHADER_SOURCE} PROPERTIES VS_TOOL_OVERRIDE "None")
 
 # Source files
-set(P1BezierPatch_PROJECT_SOURCE "./src/main.cpp" "./src/PatchApp.cpp" "./include/PatchApp.h" "./src/BezierPatchD3D12.cpp" "./include/BezierPatchD3D12.h" "./include/MorbiusStrip.h")
+set(P1BezierPatch_PROJECT_SOURCE "./src/main.cpp" "./src/PatchApp.cpp" "./include/PatchApp.h" "./src/BezierPatchD3D12.cpp" "./include/BezierPatchD3D12.h" "./include/MorbiusStrip.h" "./include/Teapot.h")
 
 add_executable(P1BezierPatch ${P1BezierPatch_PROJECT_SOURCE} ${P1BezierPatch_SHADER_SOURCE})
 

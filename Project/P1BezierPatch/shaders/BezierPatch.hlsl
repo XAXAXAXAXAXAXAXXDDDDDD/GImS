@@ -28,8 +28,10 @@
 //--------------------------------------------------------------------------------------
 cbuffer cbPerFrame : register(b0)
 {
-    float4x4 g_mViewProjection;
-    float g_fTessellationFactor;
+    float4x4 modelViewMatrix;
+    float4x4 projectionMatrix;
+    float4x4 projectionInvTransMatrix;
+    float tessellationFactor;
 };
 
 //--------------------------------------------------------------------------------------
@@ -57,7 +59,7 @@ VS_CONTROL_POINT_OUTPUT VS_main(VS_CONTROL_POINT_INPUT Input)
 {
     VS_CONTROL_POINT_OUTPUT Output;
 
-    Output.vPosition = Input.vPosition;
+    Output.vPosition = mul(float4(Input.vPosition, 1), modelViewMatrix);
 
     return Output;
 }
@@ -86,7 +88,7 @@ HS_CONSTANT_DATA_OUTPUT BezierConstantHS(InputPatch<VS_CONTROL_POINT_OUTPUT, INP
 {
     HS_CONSTANT_DATA_OUTPUT Output;
 
-    float TessAmount = g_fTessellationFactor;
+    float TessAmount = tessellationFactor;
 
     Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = Output.Edges[3] = TessAmount;
     Output.Inside[0] = Output.Inside[1] = TessAmount;
@@ -197,9 +199,10 @@ DS_OUTPUT DS_main(HS_CONSTANT_DATA_OUTPUT input,
     float3 Norm = normalize(cross(Tangent, BiTangent));
 
     DS_OUTPUT Output;
-    Output.vPosition = mul(float4(WorldPos, 1), g_mViewProjection);
+    Output.vPosition = mul(float4(WorldPos, 1), projectionMatrix);
     Output.vWorldPos = WorldPos;
-    Output.vNormal = Norm;
+    // Inverse Transpose? 
+    Output.vNormal = mul(float4(Norm, 1), projectionInvTransMatrix);
 
     return Output;
 }
@@ -214,9 +217,28 @@ DS_OUTPUT DS_main(HS_CONSTANT_DATA_OUTPUT input,
 float4 PS_main(DS_OUTPUT Input) : SV_TARGET
 {
     //float3 N = normalize(Input.vNormal);
-    //float3 L = normalize(Input.vWorldPos - float3(0.0f, 0.0f, -1.0f));
+    //float3 L = normalize(Input.vWorldPos - float3(-1.0f, 0.0f, 0.0f));
     //return abs(dot(N, L)) * float4(1, 0, 0, 1);
-    return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    
+    float3 lightDirection = float3(0.0f, 0.0f, 1.0f);
+
+    float3 l = normalize(lightDirection);
+    float3 n = normalize(Input.vNormal);
+    
+    float3 v = normalize(-Input.vWorldPos);
+    float3 h = normalize(l + v);
+
+    float3 textureColor = float3(1.0f, 1.0f, 1.0f);
+    
+    float3 ambientColor = float3(0.25f, 0.25f, 0.25f);
+    float3 diffuseColor = float3(1.0f, 0.25f, 0.25f);
+    float4 specularColor_and_Exponent = float4(0.25f, 0.25f, 0.25f, 128.0f);
+    
+    float f_diffuse = max(0.0f, dot(n, l));
+    float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
+
+    return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
+                      f_specular * specularColor_and_Exponent.xyz, 1);
 }
 
 //--------------------------------------------------------------------------------------

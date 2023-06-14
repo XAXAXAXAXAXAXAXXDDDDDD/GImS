@@ -92,7 +92,10 @@ void PatchApp::updateConstantBuffer()
   sizeY         = sizeY > 0 ? sizeY : 1.0f;
   const auto pM = glm::perspectiveFovLH_ZO(glm::radians(30.0f), sizeX, sizeY, 0.1f, 20.0f);
 
-  cb.mvp = glm::transpose(pM * m_examinerController.getTransformationMatrix() * m_normalizationTransformation);
+  cb.mv  = glm::transpose(m_examinerController.getTransformationMatrix() * m_normalizationTransformation);
+  cb.p   = glm::transpose(pM);
+  cb.pIT = glm::inverse(pM);
+  ; // glm::transpose(pM * cb.mv);
   // /*m_normalizationTransformation; */
   // glm::identity<f32m4>();
   const auto& currentConstantBuffer = m_constantBuffers[this->getFrameIndex()];
