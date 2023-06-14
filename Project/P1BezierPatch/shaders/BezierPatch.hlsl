@@ -127,8 +127,9 @@ HS_OUTPUT HS_main(InputPatch<VS_CONTROL_POINT_OUTPUT, INPUT_PATCH_SIZE> p,
 //--------------------------------------------------------------------------------------
 struct DS_OUTPUT
 {
-    float4 vPosition : SV_POSITION;
+    float4 cPosition : SV_POSITION;
     float3 vWorldPos : WORLDPOS;
+    float3 vViewPos : VIEWPOS;
     float3 vNormal : NORMAL;
 };
 
@@ -199,10 +200,11 @@ DS_OUTPUT DS_main(HS_CONSTANT_DATA_OUTPUT input,
     float3 Norm = normalize(cross(Tangent, BiTangent));
 
     DS_OUTPUT Output;
-    Output.vPosition = mul(float4(WorldPos, 1), projectionMatrix);
+    Output.cPosition = mul(float4(WorldPos, 1), projectionMatrix);
     Output.vWorldPos = WorldPos;
+    Output.vViewPos = WorldPos;
     // Inverse Transpose? 
-    Output.vNormal = mul(float4(Norm, 1), projectionInvTransMatrix);
+    Output.vNormal = Norm; //mul(float4(Norm, 1), projectionInvTransMatrix);
 
     return Output;
 }
@@ -220,15 +222,13 @@ float4 PS_main(DS_OUTPUT Input) : SV_TARGET
     //float3 L = normalize(Input.vWorldPos - float3(-1.0f, 0.0f, 0.0f));
     //return abs(dot(N, L)) * float4(1, 0, 0, 1);
     
-    float3 lightDirection = float3(0.0f, 0.0f, 1.0f);
+    float3 lightDirection = float3(0.0f, 0.0f, -1.0f);
 
     float3 l = normalize(lightDirection);
     float3 n = normalize(Input.vNormal);
     
-    float3 v = normalize(-Input.vWorldPos);
+    float3 v = normalize(-Input.vViewPos);
     float3 h = normalize(l + v);
-
-    float3 textureColor = float3(1.0f, 1.0f, 1.0f);
     
     float3 ambientColor = float3(0.25f, 0.25f, 0.25f);
     float3 diffuseColor = float3(1.0f, 0.25f, 0.25f);
@@ -237,7 +237,7 @@ float4 PS_main(DS_OUTPUT Input) : SV_TARGET
     float f_diffuse = max(0.0f, dot(n, l));
     float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
 
-    return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
+    return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz +
                       f_specular * specularColor_and_Exponent.xyz, 1);
 }
 

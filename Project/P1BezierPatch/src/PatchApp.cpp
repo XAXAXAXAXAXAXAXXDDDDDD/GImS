@@ -94,7 +94,7 @@ void PatchApp::updateConstantBuffer()
 
   cb.mv  = glm::transpose(m_examinerController.getTransformationMatrix() * m_normalizationTransformation);
   cb.p   = glm::transpose(pM);
-  cb.pIT = glm::inverse(pM);
+  cb.pIT = glm::inverse(glm::transpose(pM));
   ; // glm::transpose(pM * cb.mv);
   // /*m_normalizationTransformation; */
   // glm::identity<f32m4>();
