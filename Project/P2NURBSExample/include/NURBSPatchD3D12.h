@@ -27,7 +27,7 @@ public:
   /// <param name="materialIndex">Material index.</param>
   /// <param name="device">Device on which the GPU buffers should be created.</param>
   /// <param name="commandQueue">Command queue used to copy the data from the GPU to the GPU.</param>
-  NURBSPatchD3D12(const f32v3* positions, const ui32 nVertices, const ui32* indexBuffer, const ui32 nIndices,
+  NURBSPatchD3D12(const f32v4* positions, const ui32 nVertices, const ui32* indexBuffer, const ui32 nIndices,
                    const ComPtr<ID3D12Device>& device, const ComPtr<ID3D12CommandQueue>& commandQueue);
 
   /// <summary>
@@ -35,6 +35,12 @@ public:
   /// </summary>
   /// <param name="commandList">The command list</param>
   void addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& commandList) const;
+
+  /// <summary>
+  /// Adds the commands neccessary for rendering this triangle mesh to the provided commandList.
+  /// </summary>
+  /// <param name="commandList">The command list</param>
+  ui32* getKnotVector() const;
 
   /// <summary>
   /// Returns the input element descriptors required for the pipeline.

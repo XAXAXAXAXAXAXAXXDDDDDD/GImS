@@ -169,6 +169,20 @@ float3 EvaluateBezier(const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch,
     return Value;
 }
 
+//--------------------------------------------------------------------------------------
+float3 EvaluateCubicBSpline(const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch,
+                       float4 BasisU,
+                       float4 BasisV)
+{
+    float3 Value = float3(0, 0, 0);
+    Value = BasisV.x * (bezpatch[0].vPosition * BasisU.x + bezpatch[1].vPosition * BasisU.y + bezpatch[2].vPosition * BasisU.z + bezpatch[3].vPosition * BasisU.w);
+    Value += BasisV.y * (bezpatch[4].vPosition * BasisU.x + bezpatch[5].vPosition * BasisU.y + bezpatch[6].vPosition * BasisU.z + bezpatch[7].vPosition * BasisU.w);
+    Value += BasisV.z * (bezpatch[8].vPosition * BasisU.x + bezpatch[9].vPosition * BasisU.y + bezpatch[10].vPosition * BasisU.z + bezpatch[11].vPosition * BasisU.w);
+    Value += BasisV.w * (bezpatch[12].vPosition * BasisU.x + bezpatch[13].vPosition * BasisU.y + bezpatch[14].vPosition * BasisU.z + bezpatch[15].vPosition * BasisU.w);
+
+    return Value;
+}
+
 // The domain shader is run once per vertex and calculates the final vertex's position
 // and attributes.  It receives the UVW from the fixed function tessellator and the
 // control point outputs from the hull shader.  Since we are using the DirectX 11

@@ -89,7 +89,7 @@ private:
   ComPtr<ID3D12RootSignature> m_rootSignature;
   void                        createRootSignature();
 
-  BezierPatchD3D12 m_bezierPatch;
+  BezierPatchD3D12 m_NURBSPatch;
   f32m4            m_normalizationTransformation;
 
   struct ConstantBuffer
@@ -115,7 +115,7 @@ public:
 
     fillCorrPatch();
 
-    m_bezierPatch = BezierPatchD3D12(teapotVertices, kTeapotNumVertices, teapotPatchesCorr, 16 * kTeapotNumPatches,
+    m_NURBSPatch = BezierPatchD3D12(teapotVertices, kTeapotNumVertices, teapotPatchesCorr, 16 * kTeapotNumPatches,
                                      getDevice(), getCommandQueue());
     m_examinerController.setTranslationVector(f32v3(0, 0, 3));
     m_normalizationTransformation = getNormalizationTransformation(teapotVertices, kTeapotNumVertices);

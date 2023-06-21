@@ -80,7 +80,7 @@ struct DS_VS_OUTPUT_PS_INPUT
 
 // DOMAIN SHADER 
 // Called once per tessellated vertex
-[domain("quad")] // indicates that triangle patches were used
+[domain("quad")] // indicates that quad patches were used
 // The original patch is passed in, along with the vertex position in barycentric coordinates, and the patch constant phase hull shader output(tessellation factors)
 DS_VS_OUTPUT_PS_INPUT DS_main(
         HS_CONSTANT_DATA_OUTPUT input,
@@ -88,7 +88,7 @@ DS_VS_OUTPUT_PS_INPUT DS_main(
         const OutputPatch<HS_CONTROL_POINT_OUTPUT, 4> QuadPatch)
 {
     DS_VS_OUTPUT_PS_INPUT Out;
-    // Interpolate world space position with barycentric coordinates
+    // lerp world space position with uv-coordinates
     float3 vWorldPos = float3(
         0.5f * UV.x + QuadPatch[0].vWorldPos.x,
         0.5f * UV.y + QuadPatch[0].vWorldPos.y,

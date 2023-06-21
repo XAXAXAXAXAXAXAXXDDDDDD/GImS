@@ -6,17 +6,17 @@ namespace
 {
 struct Vertex
 {
-  gims::f32v3 position;
+  gims::f32v4 position;
 };
 
 } // namespace
 
 namespace gims
 {
-const std::vector<D3D12_INPUT_ELEMENT_DESC> BezierPatchD3D12::m_inputElementDescs = {
-    {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
+const std::vector<D3D12_INPUT_ELEMENT_DESC> NURBSPatchD3D12::m_inputElementDescs = {
+    {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
 
-NURBSPatchD3D12::NURBSPatchD3D12(const f32v3* positions, const ui32 nVertices, const ui32* indexBuffer,
+NURBSPatchD3D12::NURBSPatchD3D12(const f32v4* positions, const ui32 nVertices, const ui32* indexBuffer,
                                    const ui32 nIndices, const ComPtr<ID3D12Device>& device,
                                    const ComPtr<ID3D12CommandQueue>& commandQueue)
     : m_vertexBufferSize(static_cast<ui32>(nVertices * sizeof(Vertex)))
@@ -69,12 +69,12 @@ void NURBSPatchD3D12::addToCommandList(const ComPtr<ID3D12GraphicsCommandList>& 
   commandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
 }
 
-const std::vector<D3D12_INPUT_ELEMENT_DESC>& BezierPatchD3D12::getInputElementDescriptors()
+const std::vector<D3D12_INPUT_ELEMENT_DESC>& NURBSPatchD3D12::getInputElementDescriptors()
 {
   return m_inputElementDescs;
 }
 
-NURBSPatchD3D12::BezieNURBSPatchD3D12rPatchD3D12()
+NURBSPatchD3D12::NURBSPatchD3D12()
     : m_vertexBufferSize(0)
     , m_vertexBufferView()
     , m_nVertices(0)

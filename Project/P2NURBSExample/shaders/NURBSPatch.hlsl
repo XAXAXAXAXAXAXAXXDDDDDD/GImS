@@ -18,10 +18,10 @@
 
 // The input patch size.  In this sample, it is 16 control points.
 // This value should match the call to IASetPrimitiveTopology()
-#define INPUT_PATCH_SIZE 16
+#define INPUT_PATCH_SIZE 12
 
 // The output patch size.  In this sample, it is also 16 control points.
-#define OUTPUT_PATCH_SIZE 16
+#define OUTPUT_PATCH_SIZE 12
 
 //--------------------------------------------------------------------------------------
 // Constant Buffers
@@ -32,6 +32,7 @@ cbuffer cbPerFrame : register(b0)
     float4x4 projectionMatrix;
     float4x4 projectionInvTransMatrix;
     float tessellationFactor;
+    float knotVector[12];
 };
 
 //--------------------------------------------------------------------------------------
@@ -39,12 +40,12 @@ cbuffer cbPerFrame : register(b0)
 //--------------------------------------------------------------------------------------
 struct VS_CONTROL_POINT_INPUT
 {
-    float3 vPosition : POSITION;
+    float4 vPosition : POSITION;
 };
 
 struct VS_CONTROL_POINT_OUTPUT
 {
-    float3 vPosition : POSITION;
+    float4 vPosition : POSITION;
 };
 
 // This simple vertex shader passes the control points straight through to the
@@ -59,7 +60,7 @@ VS_CONTROL_POINT_OUTPUT VS_main(VS_CONTROL_POINT_INPUT Input)
 {
     VS_CONTROL_POINT_OUTPUT Output;
 
-    Output.vPosition = mul(float4(Input.vPosition, 1), modelViewMatrix);
+    Output.vPosition = mul(float4(Input.vPosition), modelViewMatrix);
 
     return Output;
 }
@@ -75,7 +76,7 @@ struct HS_CONSTANT_DATA_OUTPUT
 
 struct HS_OUTPUT
 {
-    float3 vPosition : BEZIERPOS;
+    float4 vPosition : BEZIERPOS;
 };
 
 // This constant hull shader is executed once per patch.  For the simple Mobius strip
@@ -169,6 +170,31 @@ float3 EvaluateBezier(const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch,
     return Value;
 }
 
+//--------------------------------------------------------------------------------------
+float4 BSplineBasis(float t)
+{
+    float invT = 1.0f - t;
+
+    return float4(invT * invT * invT,
+                   3.0f * t * invT * invT,
+                   3.0f * t * t * invT,
+                   t * t * t);
+}
+
+//--------------------------------------------------------------------------------------
+float3 EvaluateNURBS(const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch,
+                       float4 BasisU,
+                       float4 BasisV)
+{
+    float3 Value = float3(0, 0, 0);
+    Value = BasisV.x * (bezpatch[0].vPosition * BasisU.x + bezpatch[1].vPosition * BasisU.y + bezpatch[2].vPosition * BasisU.z + bezpatch[3].vPosition * BasisU.w);
+    Value += BasisV.y * (bezpatch[4].vPosition * BasisU.x + bezpatch[5].vPosition * BasisU.y + bezpatch[6].vPosition * BasisU.z + bezpatch[7].vPosition * BasisU.w);
+    Value += BasisV.z * (bezpatch[8].vPosition * BasisU.x + bezpatch[9].vPosition * BasisU.y + bezpatch[10].vPosition * BasisU.z + bezpatch[11].vPosition * BasisU.w);
+    Value += BasisV.w * (bezpatch[12].vPosition * BasisU.x + bezpatch[13].vPosition * BasisU.y + bezpatch[14].vPosition * BasisU.z + bezpatch[15].vPosition * BasisU.w);
+
+    return Value;
+}
+
 // The domain shader is run once per vertex and calculates the final vertex's position
 // and attributes.  It receives the UVW from the fixed function tessellator and the
 // control point outputs from the hull shader.  Since we are using the DirectX 11
@@ -184,11 +210,59 @@ float3 EvaluateBezier(const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch,
 // The output from the domain shader will be a vertex that will go to the video card's
 // rasterization pipeline and get drawn to the screen.
 
+static float N[4];
+static float N_U[4];
+static float N_V[4];
+
+void Basis_ITSU(float k, float p, float u)
+{
+    N[0] = 1;
+    float M = (u - knotVector[k]) / (knotVector[k + 1] - knotVector[k]);
+    for (int i = 1; i <= p; i++)
+    {
+        for (int j = i - 1; j >= 0; j--)
+        {
+            float tmp = N[j] * (M + j) / i;
+            N[j + 1] += N[j] - tmp;
+            N[j] = tmp;
+        }
+    }
+}
+
+void Basis_ITSU(float k, float p, float u)
+{
+    N[0] = 1;
+    float M = (u - knotVector[k]) / (knotVector[k + 1] - knotVector[k]);
+    for (int i = 1; i <= p; i++)
+    {
+        for (int j = i - 1; j >= 0; j--)
+        {
+            float tmp = N[j] * (M + j) / i;
+            N[j + 1] += N[j] - tmp;
+            N[j] = tmp;
+        }
+    }
+}
+
+void NURBS_ITS0(float k)
+{
+    float4 pointOnCurve = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    for (int i = 0; i <= 3; i++)
+    {
+        
+    }
+
+}
+
+
 [domain("quad")]
 DS_OUTPUT DS_main(HS_CONSTANT_DATA_OUTPUT input,
                     float2 UV : SV_DomainLocation,
                     const OutputPatch<HS_OUTPUT, OUTPUT_PATCH_SIZE> bezpatch)
 {
+    float u = UV.x;
+    float v = UV.y;
+    
     float4 BasisU = BernsteinBasis(UV.x);
     float4 BasisV = BernsteinBasis(UV.y);
     float4 dBasisU = dBernsteinBasis(UV.x);

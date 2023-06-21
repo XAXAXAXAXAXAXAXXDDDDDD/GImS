@@ -15,7 +15,7 @@ source_group("Shaders" FILES ${P2NURBSExample_SHADER_SOURCE})
 set_source_files_properties(${P2NURBSExample_SHADER_SOURCE} PROPERTIES VS_TOOL_OVERRIDE "None")
 
 # Source files
-set(P2NURBSExample_PROJECT_SOURCE "./src/main.cpp" "./src/PatchApp.cpp" "./include/PatchApp.h" "./src/NURBSPatchD3D12.cpp" "./include/NURBSPatchD3D12.h" "./include/MorbiusStrip.h" "./include/Teapot.h")
+set(P2NURBSExample_PROJECT_SOURCE "./src/main.cpp" "./src/PatchApp.cpp" "./include/PatchApp.h" "./src/NURBSPatchD3D12.cpp" "./include/NURBSPatchD3D12.h" "./include/MorbiusStrip.h" "./include/Teapot.h" "./include/UnitCircle.h")
 
 add_executable(P2NURBSExample ${P2NURBSExample_PROJECT_SOURCE} ${P2NURBSExample_SHADER_SOURCE})
 

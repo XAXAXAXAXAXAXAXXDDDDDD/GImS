@@ -1,5 +1,5 @@
-#include "BezierPatchD3D12.h"
 #include "MorbiusStrip.h"
+#include "NURBSPatchD3D12.h"
 #include "Teapot.h"
 #include <gimslib/d3d/DX12App.hpp>
 #include <gimslib/d3d/DX12Util.hpp>
@@ -89,8 +89,8 @@ private:
   ComPtr<ID3D12RootSignature> m_rootSignature;
   void                        createRootSignature();
 
-  BezierPatchD3D12 m_bezierPatch;
-  f32m4            m_normalizationTransformation;
+  NURBSPatchD3D12 m_NURBSPatch;
+  f32m4           m_normalizationTransformation;
 
   struct ConstantBuffer
   {
@@ -108,15 +108,18 @@ public:
       : DX12App(createInfo)
       , m_examinerController(true)
   {
-    m_hlslProgramSolid = HLSLProgram(L"../../../Project/P1BezierPatch/Shaders/BezierPatch.hlsl", "VS_main", "PS_main",
+    m_hlslProgramSolid = HLSLProgram(L"../../../Project/P2NURBSExample/Shaders/NURBSPatch.hlsl", "VS_main", "PS_main",
                                      "HS_main", "DS_main");
-    m_hlslProgramWireframe = HLSLProgram(L"../../../Project/P1BezierPatch/Shaders/BezierPatch.hlsl", "VS_main",
+    m_hlslProgramWireframe = HLSLProgram(L"../../../Project/P2NURBSExample/Shaders/NURBSPatch.hlsl", "VS_main",
                                          "PS_main_Wireframe", "HS_main", "DS_main");
 
     fillCorrPatch();
 
-    m_bezierPatch = BezierPatchD3D12(teapotVertices, kTeapotNumVertices, teapotPatchesCorr, 16 * kTeapotNumPatches,
-                                     getDevice(), getCommandQueue());
+    m_NURBSPatch = NURBSPatchD3D12(teapotVertices, kTeapotNumVertices, teapotPatchesCorr, 16 * kTeapotNumPatches,
+                                   getDevice(), getCommandQueue());
+    /*m_NURBSPatch = NURBSPatchD3D12(mobiusStripVertices, kMobiusNumVertices, mobiusStripPatches, 16 * kMobiusNumPatches,
+                                   getDevice(), getCommandQueue());*/
+
     m_examinerController.setTranslationVector(f32v3(0, 0, 3));
     m_normalizationTransformation = getNormalizationTransformation(teapotVertices, kTeapotNumVertices);
     // glm::identity<f32m4>();

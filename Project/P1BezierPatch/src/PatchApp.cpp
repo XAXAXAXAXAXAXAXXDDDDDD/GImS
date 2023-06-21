@@ -12,8 +12,8 @@ void PatchApp::createPipeline(bool isSolid)
     program = m_hlslProgramWireframe;
   }
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-  psoDesc.InputLayout                        = {m_bezierPatch.getInputElementDescriptors().data(),
-                                                (ui32)(m_bezierPatch.getInputElementDescriptors().size())};
+  psoDesc.InputLayout                        = {m_NURBSPatch.getInputElementDescriptors().data(),
+                                                (ui32)(m_NURBSPatch.getInputElementDescriptors().size())};
   psoDesc.pRootSignature                     = m_rootSignature.Get();
   psoDesc.VS                                 = CD3DX12_SHADER_BYTECODE(program.getVertexShader().Get());
   psoDesc.HS                                 = CD3DX12_SHADER_BYTECODE(program.getHullShader().Get());
@@ -150,7 +150,7 @@ void PatchApp::onDraw()
     commandList->SetPipelineState(m_pipelineStateWireframe.Get());
   }
 
-  m_bezierPatch.addToCommandList(commandList);
+  m_NURBSPatch.addToCommandList(commandList);
   // here draw bezier patch
 }
 
